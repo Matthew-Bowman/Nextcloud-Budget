@@ -64,32 +64,29 @@ abstract class AbstractCrudService {
     {
         $entity = $this->find($id, $userId);
 
-        echo "Updates <br />";
+        echo "Updates <br /><pre>";
         var_dump($updates);
-        echo "<br />";
+        echo "</pre><br />";
         
-        echo "Entity One <br />";
+        echo "Entity One <br /><pre>";
         var_dump($entity);
-        echo "<br />";
+        echo "</pre><br />";
         
         // Allow subclasses to validate updates before applying
         $this->beforeUpdate($entity, $updates, $userId);
-        echo "Entity Two <br />";
+        echo "Entity Two <br /><pre>";
         var_dump($entity);
-        echo "<br />";
-        die('cobain');
+        echo "</pre><br />";
         
         $this->applyUpdates($entity, $updates);
-        echo "Entity Three <br />";
+        echo "Entity Three <br /><pre>";
         var_dump($entity);
-        echo "<br />";
-        die('cobain');
+        echo "</pre><br />";
         
         $this->setTimestamps($entity, false);
-        echo "Entity Four <br />";
+        echo "Entity Four <br /><pre>";
         var_dump($entity);
-        echo "<br />";
-        
+        echo "</pre><br />";
         die('cobain');
 
         return $this->mapper->update($entity);
