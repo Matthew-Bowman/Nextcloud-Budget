@@ -160,7 +160,7 @@ class AccountController extends Controller {
             $accountNumber = !empty($data['accountNumber']) ? trim($data['accountNumber']) : null;
             $routingNumber = !empty($data['routingNumber']) ? trim($data['routingNumber']) : null;
             $trading212APIKeyID = !empty($data['t212APIKeyID']) ? trim($data['t212APIKeyID']) : null;
-            $trading212SecretKey = !empty($data['t212APISecretKey']) ? trim($data['t212APISecretKey']) : null;
+            $trading212APISecretKey = !empty($data['t212APISecretKey']) ? trim($data['t212APISecretKey']) : null;
             $sortCode = !empty($data['sortCode']) ? trim($data['sortCode']) : null;
             $iban = !empty($data['iban']) ? trim($data['iban']) : null;
             $swiftBic = !empty($data['swiftBic']) ? trim($data['swiftBic']) : null;
@@ -185,7 +185,7 @@ class AccountController extends Controller {
                 $routingNumber = $t212APIKeyIDValidation['formatted'];
             }
             if ($routingNumber !== null) {
-                $t212APISecretKeyValidation = $this->validationService->validateT212APISecretKey($trading212SecretKey);
+                $t212APISecretKeyValidation = $this->validationService->validateT212APISecretKey($trading212APISecretKey);
                 if (!$t212APISecretKeyValidation['valid']) {
                     return new DataResponse(['error' => 'Invalid routing number: ' . $t212APISecretKeyValidation['error']], Http::STATUS_BAD_REQUEST);
                 }
@@ -321,17 +321,17 @@ class AccountController extends Controller {
                 $updates['trading212APIKeyID'] = null;
             }
 
-            if (isset($data['trading212SecretKey']) && $data['trading212SecretKey'] !== '') {
+            if (isset($data['trading212APISecretKey']) && $data['trading212APISecretKey'] !== '') {
                 // Skip if masked (contains asterisks)
-                if (strpos($data['trading212SecretKey'], '*') === false && strpos($data['trading212SecretKey'], '[DECRYPTION FAILED]') === false) {
-                    $routingValidation = $this->validationService->validateT212APISecretKey($data['trading212SecretKey']);
+                if (strpos($data['trading212APISecretKey'], '*') === false && strpos($data['trading212APISecretKey'], '[DECRYPTION FAILED]') === false) {
+                    $routingValidation = $this->validationService->validateT212APISecretKey($data['trading212APISecretKey']);
                     if (!$routingValidation['valid']) {
-                        return new DataResponse(['error' => 'Invalid trading212SecretKey: ' . $routingValidation['error']], Http::STATUS_BAD_REQUEST);
+                        return new DataResponse(['error' => 'Invalid trading212APISecretKey: ' . $routingValidation['error']], Http::STATUS_BAD_REQUEST);
                     }
-                    $updates['trading212SecretKey'] = $routingValidation['formatted'];
+                    $updates['trading212APISecretKey'] = $routingValidation['formatted'];
                 }
-            } elseif (array_key_exists('trading212SecretKey', $data) && $data['trading212SecretKey'] === '') {
-                $updates['trading212SecretKey'] = null;
+            } elseif (array_key_exists('trading212APISecretKey', $data) && $data['trading212APISecretKey'] === '') {
+                $updates['trading212APISecretKey'] = null;
             }
 
 
