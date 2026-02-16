@@ -99,6 +99,8 @@ class Account extends Entity implements JsonSerializable {
         $this->addType('creditLimit', 'float');
         $this->addType('overdraftLimit', 'float');
         $this->addType('minimumPayment', 'float');
+        $this->addType('trading212ApiKeyId', 'string');
+        $this->addType('trading212ApiSecretKey', 'string');
     }
 
     /**
