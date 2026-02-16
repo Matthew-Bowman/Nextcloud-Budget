@@ -12,6 +12,7 @@ enum AccountType: string {
     case SAVINGS = 'savings';
     case CREDIT_CARD = 'credit_card';
     case INVESTMENT = 'investment';
+    case TRACKED_INVESTMENT_212 = 'tracked_investment_212';
     case LOAN = 'loan';
     case CASH = 'cash';
     case MONEY_MARKET = 'money_market';
@@ -66,6 +67,7 @@ enum AccountType: string {
             self::SAVINGS => 'Savings',
             self::CREDIT_CARD => 'Credit Card',
             self::INVESTMENT => 'Investment',
+            self::TRACKED_INVESTMENT_212 => 'Tracked Investment (Trading212)',
             self::LOAN => 'Loan',
             self::CASH => 'Cash',
             self::MONEY_MARKET => 'Money Market',

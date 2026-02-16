@@ -73,6 +73,12 @@ class Account extends Entity implements JsonSerializable {
     #[Encrypted]
     protected $swiftBic;
 
+    #[Encrypted]
+    protected $trading212APIKeyID;
+    
+    #[Encrypted]
+    protected $trading212APISecretKey;
+
     protected $accountHolderName;
     protected $openingDate;
     protected $interestRate;
