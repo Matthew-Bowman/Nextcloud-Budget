@@ -18,7 +18,7 @@ use OCP\Migration\SimpleMigrationStep;
  *
  * Fixes: https://github.com/otherworld-dev/budget/issues/38
  */
-class Version001000034Date20260216 extends SimpleMigrationStep
+class Version001000035Date20260216 extends SimpleMigrationStep
 {
 
 	public function changeSchema(IOutput $output, Closure $schemaClosure, array $options): ?ISchemaWrapper
