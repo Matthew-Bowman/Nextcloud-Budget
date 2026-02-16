@@ -151,7 +151,7 @@ export default class AccountsModule {
 
         // Categorize accounts into assets and liabilities
         console.log('Test');
-        const assetTypes = ['checking', 'savings', 'investment', 'cash'];
+        const assetTypes = ['checking', 'savings', 'investment', 'investment-tracked_212', 'cash'];
         const liabilityTypes = ['credit_card', 'loan'];
 
         const assets = accounts.filter(acc => assetTypes.includes(getField(acc, 'type')));
