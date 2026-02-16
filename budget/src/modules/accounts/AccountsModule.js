@@ -150,6 +150,7 @@ export default class AccountsModule {
         };
 
         // Categorize accounts into assets and liabilities
+        console.log('Test');
         const assetTypes = ['checking', 'savings', 'investment', 'cash'];
         const liabilityTypes = ['credit_card', 'loan'];
 
@@ -1183,6 +1184,7 @@ export default class AccountsModule {
         }
     }
 
+    // Here is where I gotta be baby
     async saveAccount() {
         try {
             // Get form elements
