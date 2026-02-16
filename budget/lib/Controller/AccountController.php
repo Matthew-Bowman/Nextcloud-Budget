@@ -229,14 +229,14 @@ class AccountController extends Controller {
                 $sortCode,
                 $iban,
                 $swiftBic,
-                $trading212APIKeyID,
-                $trading212APISecretKey,
                 $accountHolderName,
                 $openingDate,
                 $interestRate,
                 $creditLimit,
                 $overdraftLimit,
-                $minimumPayment
+                $minimumPayment,
+                $trading212APIKeyID,
+                $trading212APISecretKey,
             );
 
             // Audit log the account creation
