@@ -25,6 +25,8 @@ use OCP\AppFramework\Db\Entity;
  * @method void setInstitution(?string $institution)
  * @method void setTrading212ApiKeyId(?string $trading212ApiKeyId)
  * @method void setTrading212ApiSecretKey(?string $trading212ApiSecretKey)
+ * @method string|null getTrading212ApiKeyId()
+ * @method string|null getTrading212ApiSecretKey()
  * @method string|null getAccountNumber()
  * @method void setAccountNumber(?string $accountNumber)
  * @method string|null getRoutingNumber()
@@ -137,6 +139,8 @@ class Account extends Entity implements JsonSerializable {
             'type' => $this->getType(),
             'balance' => $this->getBalance(),
             'currency' => $this->getCurrency(),
+            'trading212ApiKeyId' => $this->getTrading212ApiKeyId(),
+            'trading212ApiSecretKey' => $this->getTrading212ApiSecretKey(),
             'institution' => $this->getInstitution(),
             'accountNumber' => $this->maskAccountNumber($this->getAccountNumber()),
             'routingNumber' => $this->maskRoutingNumber($this->getRoutingNumber()),
@@ -167,6 +171,8 @@ class Account extends Entity implements JsonSerializable {
             'type' => $this->getType(),
             'balance' => $this->getBalance(),
             'currency' => $this->getCurrency(),
+            'trading212ApiKeyId' => $this->getTrading212ApiKeyId(),
+            'trading212ApiSecretKey' => $this->getTrading212ApiSecretKey(),
             'institution' => $this->getInstitution(),
             'accountNumber' => $this->getAccountNumber(),
             'routingNumber' => $this->getRoutingNumber(),
