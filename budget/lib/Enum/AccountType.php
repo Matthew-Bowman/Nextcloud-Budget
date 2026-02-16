@@ -12,7 +12,7 @@ enum AccountType: string {
     case SAVINGS = 'savings';
     case CREDIT_CARD = 'credit_card';
     case INVESTMENT = 'investment';
-    case TRACKED_INVESTMENT_212 = 'tracked_investment_212';
+    case TRACKED_INVESTMENT_212 = 'tracked-investment_212';
     case LOAN = 'loan';
     case CASH = 'cash';
     case MONEY_MARKET = 'money_market';
