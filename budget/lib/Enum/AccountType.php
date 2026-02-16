@@ -85,6 +85,9 @@ enum AccountType: string {
      * Check if a string is a valid account type.
      */
     public static function isValid(string $value): bool {
+        var_dump($value);
+        var_dump(self::values());
+        die('cobain');
         return in_array($value, self::values(), true);
     }
 }
