@@ -60,14 +60,37 @@ abstract class AbstractCrudService {
      * @return T
      * @throws DoesNotExistException
      */
-    public function update(int $id, string $userId, array $updates): Entity {
+    public function update(int $id, string $userId, array $updates): Entity
+    {
         $entity = $this->find($id, $userId);
 
+        echo "Updates <br />";
+        var_dump($updates);
+        echo "<br />";
+        
+        echo "Entity One <br />";
+        var_dump($entity);
+        echo "<br />";
+        
         // Allow subclasses to validate updates before applying
         $this->beforeUpdate($entity, $updates, $userId);
-
+        echo "Entity Two <br />";
+        var_dump($entity);
+        echo "<br />";
+        die('cobain');
+        
         $this->applyUpdates($entity, $updates);
+        echo "Entity Three <br />";
+        var_dump($entity);
+        echo "<br />";
+        die('cobain');
+        
         $this->setTimestamps($entity, false);
+        echo "Entity Four <br />";
+        var_dump($entity);
+        echo "<br />";
+        
+        die('cobain');
 
         return $this->mapper->update($entity);
     }
