@@ -29,10 +29,21 @@ class Version001000034Date20260216 extends SimpleMigrationStep
 		if ($schema->hasTable('budget_accounts')) {
 			$table = $schema->getTable('budget_accounts');
 
-			if ($table->hasColumn('trading212SecretKey') && !$table->hasColumn('trading212APISecretKey')) {
-				$table->renameColumn('trading212SecretKey', 'trading212APISecretKey');
+			// 1️⃣ Add new column
+			if (!$table->hasColumn('trading212APISecretKey')) {
+				$table->addColumn('trading212APISecretKey', 'string', [
+					'length' => 255,
+					'notnull' => false,
+					'default' => null,
+				]);
+			}
+
+			// 2️⃣ Remove old column (schema only)
+			if ($table->hasColumn('trading212SecretKey')) {
+				$table->dropColumn('trading212SecretKey');
 			}
 		}
+
 		return $schema;
 	}
 }
