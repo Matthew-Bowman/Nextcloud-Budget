@@ -121,6 +121,8 @@ class AccountMapper extends QBMapper {
             ->set('balance', $qb->createNamedParameter($balanceStr))
             ->set('currency', $qb->createNamedParameter($entity->getCurrency()))
             ->set('institution', $qb->createNamedParameter($entity->getInstitution()))
+            ->set('trading212ApiKeyId', $qb->createNamedParameter($entity->getTrading212ApiKeyId()))
+            ->set('trading212ApiSecretKey', $qb->createNamedParameter($entity->getTrading212ApiSecretKey()))
             ->set('account_number', $qb->createNamedParameter($this->getEncryptedValue($entity, 'accountNumber')))
             ->set('routing_number', $qb->createNamedParameter($this->getEncryptedValue($entity, 'routingNumber')))
             ->set('sort_code', $qb->createNamedParameter($this->getEncryptedValue($entity, 'sortCode')))
