@@ -41,8 +41,8 @@ class AccountService extends AbstractCrudService {
         ?float $creditLimit = null,
         ?float $overdraftLimit = null,
         ?float $minimumPayment = null,
-        ?string $trading212APIKeyID = null,
-        ?string $trading212APISecretKey = null,
+        ?string $trading212ApiKeyId = null,
+        ?string $trading212ApiSecretKey = null,
     ): Account {
         $account = new Account();
         $account->setUserId($userId);
@@ -62,8 +62,8 @@ class AccountService extends AbstractCrudService {
         $account->setCreditLimit($creditLimit);
         $account->setOverdraftLimit($overdraftLimit);
         $account->setMinimumPayment($minimumPayment);
-        $account->setTrading212APIKeyID($trading212APIKeyID);
-        $account->setTrading212APISecretKey($trading212APISecretKey);
+        $account->setTrading212ApiKeyId($trading212ApiKeyId);
+        $account->setTrading212ApiSecretKey($trading212ApiSecretKey);
         $this->setTimestamps($account, true);
 
         return $this->mapper->insert($account);

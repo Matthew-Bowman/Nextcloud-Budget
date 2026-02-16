@@ -23,8 +23,8 @@ use OCP\AppFramework\Db\Entity;
  * @method void setCurrency(string $currency)
  * @method string|null getInstitution()
  * @method void setInstitution(?string $institution)
- * @method void setTrading212ApiKeyId(?string $trading212APIKeyID)
- * @method void setTrading212ApiSecretKey(?string $trading212APISecretKey)
+ * @method void setTrading212ApiKeyId(?string $trading212ApiKeyId)
+ * @method void setTrading212ApiSecretKey(?string $trading212ApiSecretKey)
  * @method string|null getAccountNumber()
  * @method void setAccountNumber(?string $accountNumber)
  * @method string|null getRoutingNumber()
@@ -76,10 +76,10 @@ class Account extends Entity implements JsonSerializable {
     protected $swiftBic;
 
     #[Encrypted]
-    protected $trading212APIKeyID;
+    protected $trading212ApiKeyId;
     
     #[Encrypted]
-    protected $trading212APISecretKey;
+    protected $trading212ApiSecretKey;
 
     protected $accountHolderName;
     protected $openingDate;

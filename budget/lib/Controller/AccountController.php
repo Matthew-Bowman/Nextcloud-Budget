@@ -159,8 +159,8 @@ class AccountController extends Controller {
             $institution = !empty($data['institution']) ? trim($data['institution']) : null;
             $accountNumber = !empty($data['accountNumber']) ? trim($data['accountNumber']) : null;
             $routingNumber = !empty($data['routingNumber']) ? trim($data['routingNumber']) : null;
-            $trading212APIKeyID = !empty($data['trading212APIKeyID']) ? trim($data['trading212APIKeyID']) : null;
-            $trading212APISecretKey = !empty($data['trading212APISecretKey']) ? trim($data['trading212APISecretKey']) : null;
+            $trading212ApiKeyId = !empty($data['trading212ApiKeyId']) ? trim($data['trading212ApiKeyId']) : null;
+            $trading212ApiSecretKey = !empty($data['trading212ApiSecretKey']) ? trim($data['trading212ApiSecretKey']) : null;
             $sortCode = !empty($data['sortCode']) ? trim($data['sortCode']) : null;
             $iban = !empty($data['iban']) ? trim($data['iban']) : null;
             $swiftBic = !empty($data['swiftBic']) ? trim($data['swiftBic']) : null;
@@ -178,14 +178,14 @@ class AccountController extends Controller {
 
             // Validate Trading212 Keys
             if ($routingNumber !== null) {
-                $t212APIKeyIDValidation = $this->validationService->validateT212APIKeyID($trading212APIKeyID);
+                $t212APIKeyIDValidation = $this->validationService->validateT212APIKeyID($trading212ApiKeyId);
                 if (!$t212APIKeyIDValidation['valid']) {
                     return new DataResponse(['error' => 'Invalid routing number: ' . $t212APIKeyIDValidation['error']], Http::STATUS_BAD_REQUEST);
                 }
                 $routingNumber = $t212APIKeyIDValidation['formatted'];
             }
             if ($routingNumber !== null) {
-                $t212APISecretKeyValidation = $this->validationService->validateT212APISecretKey($trading212APISecretKey);
+                $t212APISecretKeyValidation = $this->validationService->validateT212APISecretKey($trading212ApiSecretKey);
                 if (!$t212APISecretKeyValidation['valid']) {
                     return new DataResponse(['error' => 'Invalid routing number: ' . $t212APISecretKeyValidation['error']], Http::STATUS_BAD_REQUEST);
                 }
@@ -235,8 +235,8 @@ class AccountController extends Controller {
                 $creditLimit,
                 $overdraftLimit,
                 $minimumPayment,
-                $trading212APIKeyID,
-                $trading212APISecretKey,
+                $trading212ApiKeyId,
+                $trading212ApiSecretKey,
             );
 
             // Audit log the account creation
@@ -295,8 +295,8 @@ class AccountController extends Controller {
             $stringFields = [
                 'institution' => ValidationService::MAX_NAME_LENGTH,
                 'accountHolderName' => ValidationService::MAX_NAME_LENGTH,
-                'trading212APIKeyID' => ValidationService::MAX_NAME_LENGTH,
-                'trading212APISecretKey' => ValidationService::MAX_NAME_LENGTH,
+                'trading212ApiKeyId' => ValidationService::MAX_NAME_LENGTH,
+                'trading212ApiSecretKey' => ValidationService::MAX_NAME_LENGTH,
             ];
 
             foreach ($stringFields as $field => $maxLength) {
