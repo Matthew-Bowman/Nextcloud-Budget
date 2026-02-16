@@ -63,31 +63,11 @@ abstract class AbstractCrudService {
     public function update(int $id, string $userId, array $updates): Entity
     {
         $entity = $this->find($id, $userId);
-
-        echo "Updates <br /><pre>";
-        var_dump($updates);
-        echo "</pre><br />";
-        
-        echo "Entity One <br /><pre>";
-        var_dump($entity);
-        echo "</pre><br />";
         
         // Allow subclasses to validate updates before applying
         $this->beforeUpdate($entity, $updates, $userId);
-        echo "Entity Two <br /><pre>";
-        var_dump($entity);
-        echo "</pre><br />";
-        
-        $this->applyUpdates($entity, $updates);
-        echo "Entity Three <br /><pre>";
-        var_dump($entity);
-        echo "</pre><br />";
-        
+        $this->applyUpdates($entity, $updates);        
         $this->setTimestamps($entity, false);
-        echo "Entity Four <br /><pre>";
-        var_dump($entity);
-        echo "</pre><br />";
-        die('cobain');
 
         return $this->mapper->update($entity);
     }
