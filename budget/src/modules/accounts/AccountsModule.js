@@ -1237,15 +1237,15 @@ export default class AccountsModule {
 
             // Sensitive fields: only include if user entered a value
             // For edits, empty means "keep existing" - don't send to avoid overwriting
-            const sensitiveFields = ['accountNumber', 'routingNumber', 'sortCode', 'iban', 'swiftBic', 't212APIKeyID', 't212APISecretKey'];
+            const sensitiveFields = ['accountNumber', 'routingNumber', 'sortCode', 'iban', 'swiftBic', 'trading212APIKeyID', 'trading212APISecretKey'];
             const sensitiveFieldIds = {
                 accountNumber: 'form-account-number',
                 routingNumber: 'form-routing-number',
                 sortCode: 'form-sort-code',
                 iban: 'form-iban',
                 swiftBic: 'form-swift-bic',
-                t212APIKeyID: 'investment-tracked-212_api-key-id',
-                t212APISecretKey: 'investment-tracked-212_api-secret-key',
+                trading212APIKeyID: 'investment-tracked-212_api-key-id',
+                trading212APISecretKey: 'investment-tracked-212_api-secret-key',
             };
 
             sensitiveFields.forEach(field => {
