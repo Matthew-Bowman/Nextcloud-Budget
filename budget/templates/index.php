@@ -3937,6 +3937,7 @@ style('budget', 'budget-main');
                         <option value="savings">Savings Account</option>
                         <option value="credit_card">Credit Card</option>
                         <option value="investment">Investment Account</option>
+                        <option value="investment-tracked_212">Tracked Investment Account (Trading212)</option>
                         <option value="loan">Loan Account</option>
                         <option value="cash">Cash</option>
                     </select>
@@ -3985,6 +3986,23 @@ style('budget', 'budget-main');
                     <label for="account-opening-date">Opening Date</label>
                     <input type="date" id="account-opening-date" aria-describedby="account-opening-date-help">
                     <small id="account-opening-date-help" class="form-text">When the account was opened</small>
+                </div>
+            </div>
+
+            <!-- Trading212 API Details (conditional) -->
+            <div class="form-section" id="investment-tracked-212_api-details-section">
+                <h4>Trading212 API Details</h4>
+
+                <div class="form-group conditional" id="investment-tracked-212_api-key-id_group">
+                    <label for="investment-tracked-212_api-key-id">Trading212 API Secret Key</label>
+                    <input type="text" id="investment-tracked-212_api-key-id" aria-describedby="investment-tracked-212_api-key-id_help" maxlength="255">
+                    <small id="investment-tracked-212_api-key-id_help" class="form-text">Trading212 API ID</small>
+                </div>
+
+                <div class="form-group conditional" id="investment-tracked-212_api-secret-key_group">
+                    <label for="investment-tracked-212_api-secret-key">Trading212 API Key ID</label>
+                    <input type="text" id="investment-tracked-212_api-secret-key" aria-describedby="investment-tracked-212_api-secret-key_help" maxlength="255">
+                    <small id="investment-tracked-212_api-secret-key_help" class="form-text">Trading212 API ID</small>
                 </div>
             </div>
 

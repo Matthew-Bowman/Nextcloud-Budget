@@ -1237,13 +1237,15 @@ export default class AccountsModule {
 
             // Sensitive fields: only include if user entered a value
             // For edits, empty means "keep existing" - don't send to avoid overwriting
-            const sensitiveFields = ['accountNumber', 'routingNumber', 'sortCode', 'iban', 'swiftBic'];
+            const sensitiveFields = ['accountNumber', 'routingNumber', 'sortCode', 'iban', 'swiftBic', 'investment-tracked-212_api-key-id', 'investment-tracked-212_api-secret-key'];
             const sensitiveFieldIds = {
                 accountNumber: 'form-account-number',
                 routingNumber: 'form-routing-number',
                 sortCode: 'form-sort-code',
                 iban: 'form-iban',
-                swiftBic: 'form-swift-bic'
+                swiftBic: 'form-swift-bic',
+                t212APIKeyID: 'investment-tracked-212_api-key-id',
+                t212APISecretKey: 'investment-tracked-212_api-secret-key',
             };
 
             sensitiveFields.forEach(field => {
@@ -1519,6 +1521,10 @@ export default class AccountsModule {
 
         // Show relevant fields based on account type and currency
         switch (accountType) {
+            case 'investment-tracked_212':
+                document.getElementById('investment-tracked-212_api-key-id_group').style.display = 'block';
+                document.getElementById('investment-tracked-212_api-secret-key_group').style.display = 'block';
+                break;
             case 'checking':
             case 'savings':
                 // Show banking fields based on currency

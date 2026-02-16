@@ -231,6 +231,23 @@ class ValidationService {
     }
 
     /**
+     * Validate t212APIKeyID
+     */
+    public function validateT212APIKeyID(string $t212APIKeyID): array {
+        $t212APIKeyID = preg_replace('/\D/', '', $t212APIKeyID);
+
+        return ['valid' => true, 'formatted' => $t212APIKeyID];
+    }
+    /**
+     * Validate t212APISecretKey
+     */
+    public function validateT212APISecretKey(string $t212APISecretKey): array {
+        $t212APISecretKey = preg_replace('/\D/', '', $t212APISecretKey);
+
+        return ['valid' => true, 'formatted' => $t212APISecretKey];
+    }
+    
+    /**
      * Validate US routing number
      */
     public function validateRoutingNumber(string $routingNumber): array {
