@@ -69,12 +69,18 @@ abstract class AbstractCrudService {
         $this->applyUpdates($entity, $updates);        
         $this->setTimestamps($entity, false);
 
+        $rtn = $this->mapper->update($entity);
+
         echo '<pre>';
         var_dump($entity);
         echo '</pre>';
+        echo '<br/><br/><br/><br/><br/><br/><br/><br/><br/>';
+        echo '<pre>';
+        var_dump($rtn);
+        echo '</pre>';
         die('cobain');
 
-        return $this->mapper->update($entity);
+        return $rtn;
     }
 
     /**
