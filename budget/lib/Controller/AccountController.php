@@ -400,6 +400,9 @@ class AccountController extends Controller {
                 return new DataResponse(['error' => 'No valid fields to update'], Http::STATUS_BAD_REQUEST);
             }
 
+            var_dump($updates);
+            die('cobain');
+
             $account = $this->service->update($id, $this->userId, $updates);
 
             // Audit log the update
