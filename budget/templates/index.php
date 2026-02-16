@@ -30,7 +30,7 @@ style('budget', 'budget-main');
                         <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/>
                     </svg>
                 </span>
-                Dashboardd
+                Dashboard
             </a>
         </li>
         <li class="app-navigation-entry" data-id="accounts">
