@@ -159,8 +159,8 @@ class AccountController extends Controller {
             $institution = !empty($data['institution']) ? trim($data['institution']) : null;
             $accountNumber = !empty($data['accountNumber']) ? trim($data['accountNumber']) : null;
             $routingNumber = !empty($data['routingNumber']) ? trim($data['routingNumber']) : null;
-            $trading212APIKeyID = !empty($data['t212APIKeyID']) ? trim($data['t212APIKeyID']) : null;
-            $trading212APISecretKey = !empty($data['t212APISecretKey']) ? trim($data['t212APISecretKey']) : null;
+            $trading212APIKeyID = !empty($data['trading212APIKeyID']) ? trim($data['trading212APIKeyID']) : null;
+            $trading212APISecretKey = !empty($data['trading212APISecretKey']) ? trim($data['trading212APISecretKey']) : null;
             $sortCode = !empty($data['sortCode']) ? trim($data['sortCode']) : null;
             $iban = !empty($data['iban']) ? trim($data['iban']) : null;
             $swiftBic = !empty($data['swiftBic']) ? trim($data['swiftBic']) : null;
@@ -229,6 +229,8 @@ class AccountController extends Controller {
                 $sortCode,
                 $iban,
                 $swiftBic,
+                $trading212APIKeyID,
+                $trading212APISecretKey,
                 $accountHolderName,
                 $openingDate,
                 $interestRate,
@@ -293,6 +295,8 @@ class AccountController extends Controller {
             $stringFields = [
                 'institution' => ValidationService::MAX_NAME_LENGTH,
                 'accountHolderName' => ValidationService::MAX_NAME_LENGTH,
+                'trading212APIKeyID' => ValidationService::MAX_NAME_LENGTH,
+                'trading212APISecretKey' => ValidationService::MAX_NAME_LENGTH,
             ];
 
             foreach ($stringFields as $field => $maxLength) {
@@ -306,35 +310,6 @@ class AccountController extends Controller {
                     $updates[$field] = null;
                 }
             }
-
-            // Validate Trading212 Keys if Provided
-            if (isset($data['trading212APIKeyID']) && $data['trading212APIKeyID'] !== '') {
-                // Skip if masked (contains asterisks)
-                if (strpos($data['trading212APIKeyID'], '*') === false && strpos($data['trading212APIKeyID'], '[DECRYPTION FAILED]') === false) {
-                    $routingValidation = $this->validationService->validateT212APIKeyID($data['trading212APIKeyID']);
-                    if (!$routingValidation['valid']) {
-                        return new DataResponse(['error' => 'Invalid trading212APIKeyID: ' . $routingValidation['error']], Http::STATUS_BAD_REQUEST);
-                    }
-                    $updates['trading212APIKeyID'] = $routingValidation['formatted'];
-                }
-            } elseif (array_key_exists('trading212APIKeyID', $data) && $data['trading212APIKeyID'] === '') {
-                $updates['trading212APIKeyID'] = null;
-            }
-
-            if (isset($data['trading212APISecretKey']) && $data['trading212APISecretKey'] !== '') {
-                // Skip if masked (contains asterisks)
-                if (strpos($data['trading212APISecretKey'], '*') === false && strpos($data['trading212APISecretKey'], '[DECRYPTION FAILED]') === false) {
-                    $routingValidation = $this->validationService->validateT212APISecretKey($data['trading212APISecretKey']);
-                    if (!$routingValidation['valid']) {
-                        return new DataResponse(['error' => 'Invalid trading212APISecretKey: ' . $routingValidation['error']], Http::STATUS_BAD_REQUEST);
-                    }
-                    $updates['trading212APISecretKey'] = $routingValidation['formatted'];
-                }
-            } elseif (array_key_exists('trading212APISecretKey', $data) && $data['trading212APISecretKey'] === '') {
-                $updates['trading212APISecretKey'] = null;
-            }
-
-
 
             // Validate banking fields if provided
             if (isset($data['routingNumber']) && $data['routingNumber'] !== '') {
