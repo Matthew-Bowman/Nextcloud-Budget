@@ -58,7 +58,7 @@ class Trading212AccountJob extends TimedJob
 
                 $qb = $this->db->getQueryBuilder();
 
-                $qb->update('yourapp_items')
+                $qb->update('budget_accounts')
                     ->set(
                         'balance',
                         $qb->createNamedParameter($computed, IQueryBuilder::PARAM_STR)
@@ -71,7 +71,7 @@ class Trading212AccountJob extends TimedJob
                     );
             } catch (\Throwable $e) {
                 $this->logger->error('Background job failed for row ' . $id . ': ' . $e->getMessage(), [
-                    'app' => 'yourapp',
+                    'app' => 'budget',
                     'exception' => $e,
                 ]);
             }
