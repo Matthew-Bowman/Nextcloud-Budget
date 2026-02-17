@@ -94,7 +94,7 @@ class Trading212AccountJob extends TimedJob
         
         $result = $qb->executeQuery();
         
-        $rows = []
+        $rows = [];
         while ($row = $result->fetch()) {
             $rows[] = $row;
         }
