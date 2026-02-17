@@ -9,7 +9,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
 use OCP\Http\Client\IClientService;
-use OCP\ILogger;
+use Psr\Log\LoggerInterface;
 
 class Trading212AccountJob extends TimedJob
 {
@@ -32,7 +32,7 @@ class Trading212AccountJob extends TimedJob
 
         $db = $server->get(IDBConnection::class);
         $clientService = $server->get(IClientService::class);
-        $logger = $server->get(ILogger::class);
+        $logger = Server::get(LoggerInterface::class);
 
         $table = 'budget_accounts';
 
