@@ -67,6 +67,9 @@ class Trading212AccountJob extends TimedJob
                             $qb->createNamedParameter($id, IQueryBuilder::PARAM_INT)
                         )
                     );
+
+                $qb->executeStatement();
+                
             } catch (\Throwable $e) {
                 $this->logger->error('Background job failed for row ' . $id . ': ' . $e->getMessage(), [
                     'app' => 'budget',
@@ -95,11 +98,6 @@ class Trading212AccountJob extends TimedJob
         while ($row = $result->fetch()) {
             $rows[] = $row;
         }
-
-        $this->logger->debug('Rows dump: ' . json_encode(
-            $rows,
-            JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PARTIAL_OUTPUT_ON_ERROR
-        ), ['app' => 'budget']);
 
         $result->closeCursor();
 
