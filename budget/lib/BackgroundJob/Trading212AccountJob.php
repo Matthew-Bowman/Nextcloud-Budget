@@ -32,7 +32,7 @@ class Trading212AccountJob extends TimedJob
 
         $db = $server->get(IDBConnection::class);
         $clientService = $server->get(IClientService::class);
-        $logger = Server::get(LoggerInterface::class);
+        $logger = $server::get(LoggerInterface::class);
 
         $table = 'budget_accounts';
 
