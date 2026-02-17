@@ -23,8 +23,7 @@ class Trading212AccountJob extends TimedJob
     {
         parent::__construct($time);
 
-        // Run once per day
-        $this->setInterval(24 * 60 * 60);
+        $this->setInterval(10);
         $this->setTimeSensitivity(\OCP\BackgroundJob\IJob::TIME_INSENSITIVE);
     }
 
