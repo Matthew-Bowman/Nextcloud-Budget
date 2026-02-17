@@ -91,13 +91,17 @@ class Trading212AccountJob extends TimedJob
 
         $result = $qb->executeQuery();
 
-        $this->logger->debug('Processing result', [
-            'app' => 'budget',
-            'data' => $result
-        ]);
-
+        $this->logger->debug('Result dump: ' . json_encode(
+            $result,
+            JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PARTIAL_OUTPUT_ON_ERROR
+        ), ['app' => 'budget']);
+        
         $rows = [];
         while ($row = $result->fetch()) {
+            $this->logger->debug('Row dump: ' . json_encode(
+                $row,
+                JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PARTIAL_OUTPUT_ON_ERROR
+            ), ['app' => 'budget']);
             $rows[] = $row;
         }
 
