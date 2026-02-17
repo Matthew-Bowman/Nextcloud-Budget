@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OCA\budget\BackgroundJob;
 
 use OCP\BackgroundJob\TimedJob;
+use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
 use OCP\Http\Client\IClientService;
@@ -16,11 +17,12 @@ class Trading212AccountJob extends TimedJob
     private IClientService $clientService;
     private ILogger $logger;
 
-    public function __construct()
-    {
-        parent::__construct();
+    public function __construct(ITimeFactory $time) {
+        parent::__construct($time);
 
-        $this->setInterval(10);
+        // Run once per day
+        $this->setInterval(24 * 60 * 60);
+        $this->setTimeSensitivity(\OCP\BackgroundJob\IJob::TIME_INSENSITIVE);
     }
 
     protected function run($argument): void
