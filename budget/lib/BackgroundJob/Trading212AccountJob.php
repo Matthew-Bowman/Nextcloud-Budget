@@ -16,24 +16,25 @@ class Trading212AccountJob extends TimedJob
     private IClientService $clientService;
     private ILogger $logger;
 
-    public function __construct(
-        IDBConnection $db,
-        IClientService $clientService,
-        ILogger $logger
-    ) {
-        parent::__construct();
+    public function __construct(ITimeFactory $time)
+    {
+        parent::__construct($time);
 
-        // every 5 minutes - 300
-        $this->setInterval(10);
-
-        $this->db = $db;
-        $this->clientService = $clientService;
-        $this->logger = $logger;
+        // Run every 6 hours
+        $this->setInterval(6 * 60 * 60);
+        $this->setTimeSensitivity(\OCP\BackgroundJob\IJob::TIME_INSENSITIVE);
     }
 
     protected function run($argument): void
     {
-        $table = 'budget_accounts'; // WITHOUT oc_ prefix
+
+        $server = \OC::$server;
+
+        $db = $server->get(IDBConnection::class);
+        $clientService = $server->get(IClientService::class);
+        $logger = $server->get(ILogger::class);
+
+        $table = 'budget_accounts';
 
         // Limit each run so you don’t overload remote services
         $batchSize = 50;
@@ -58,7 +59,7 @@ class Trading212AccountJob extends TimedJob
 
                 $qb = $this->db->getQueryBuilder();
 
-                $qb->update('budget_accounts')
+                $qb->update($table)
                     ->set(
                         'balance',
                         $qb->createNamedParameter($computed, IQueryBuilder::PARAM_STR)
