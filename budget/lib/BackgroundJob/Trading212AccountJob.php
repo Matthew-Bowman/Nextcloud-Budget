@@ -6,6 +6,8 @@ namespace OCA\Budget\BackgroundJob;
 
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\DB\QueryBuilder\IQueryBuilder;
+use OCP\Http\Client\IClientService;
+use OCP\Http\Client\IClient;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IDBConnection;
 use OCP\Server;
@@ -13,6 +15,7 @@ use Psr\Log\LoggerInterface;
 
 class Trading212AccountJob extends TimedJob
 {
+    private IClient $client;
     private IDBConnection $db;
     private LoggerInterface $logger;
 
@@ -28,10 +31,11 @@ class Trading212AccountJob extends TimedJob
     protected function run($argument): void
     {
 
-        $server = \OC::$server;
-
         $this->db  = Server::get(IDBConnection::class);
         $this->logger = Server::get(LoggerInterface::class);
+
+        $clientService = Server::get(IClientService::class);
+        $this->client = $clientService->newClient();
 
         $table = 'budget_accounts';
 
@@ -106,34 +110,46 @@ class Trading212AccountJob extends TimedJob
     private function doLogic(string $apiKey, $secretKey): string
     {
 
-        $curl = curl_init();
+        try {
+            $response = $this->client->get(
+                'https://live.trading212.com/api/v0/equity/account/summary',
+                [
+                    'auth' => [$apiKey, $secretKey],
+                    'timeout' => 15,
+                    'headers' => [
+                        'Accept' => 'application/json',
+                    ],
+                ]
+            );
 
-        curl_setopt_array($curl, [
-            CURLOPT_HTTPHEADER => [
-                "Authorization: $apiKey",
-                "Authorization: Basic " . base64_encode("$apiKey:$secretKey")
-            ],
-            CURLOPT_URL => "https://live.trading212.com/api/v0/equity/account/summary",
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_CUSTOMREQUEST => "GET",
-        ]);
+            $statusCode = $response->getStatusCode();
+            $body = $response->getBody();
 
-        $response = curl_exec($curl);
-        $error = curl_error($curl);
+            if ($statusCode < 200 || $statusCode >= 300) {
+                throw new \RuntimeException("HTTP $statusCode: $body");
+            }
 
-        curl_close($curl);
-
-        if ($error) {
-
-            $this->logger->error('[Trading212AccountJob] - Failed API Request', [
+            $this->logger->debug('Trading212 response received', [
                 'app' => 'budget',
-                'exception' => $error,
+                'status' => $statusCode,
             ]);
-        } else {
-            $this->logger->debug($response, ['app' => 'budget']);
+
+            $data = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
+
+            $this->logger->debug('Account summary', [
+                'app' => 'budget',
+                'data' => $data,
+            ]);
+        } catch (\Throwable $e) {
+            $this->logger->error(
+                'Trading212 API call failed: ' . $e->getMessage(),
+                [
+                    'app' => 'budget',
+                    'exception' => $e,
+                ]
+            );
+
+            throw $e;
         }
-
-
-        return '420.69';
     }
 }
