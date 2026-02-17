@@ -16,13 +16,11 @@ class Trading212AccountJob extends TimedJob
     private IClientService $clientService;
     private ILogger $logger;
 
-    public function __construct(ITimeFactory $time)
+    public function __construct()
     {
-        parent::__construct($time);
+        parent::__construct();
 
-        // Run every 6 hours
-        $this->setInterval(6 * 60 * 60);
-        $this->setTimeSensitivity(\OCP\BackgroundJob\IJob::TIME_INSENSITIVE);
+        $this->setInterval(10);
     }
 
     protected function run($argument): void
