@@ -10,7 +10,7 @@ use OCP\IDBConnection;
 use OCP\Http\Client\IClientService;
 use OCP\ILogger;
 
-class ProcessRowsJob extends TimedJob
+class Trading212AccountJob extends TimedJob
 {
     private IDBConnection $db;
     private IClientService $clientService;
