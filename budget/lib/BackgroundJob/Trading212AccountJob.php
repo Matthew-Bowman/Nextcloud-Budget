@@ -140,6 +140,21 @@ class Trading212AccountJob extends TimedJob
                 'app' => 'budget',
                 'data' => $data,
             ]);
+
+            try {
+
+                return $data['totalValue'];
+            } catch (\Throwable $e) {
+                $this->logger->error(
+                    'Trading212 API data parse failed: ' . $e->getMessage(),
+                    [
+                        'app' => 'budget',
+                        'exception' => $e,
+                    ]
+                );
+            }
+
+            throw $e;
         } catch (\Throwable $e) {
             $this->logger->error(
                 'Trading212 API call failed: ' . $e->getMessage(),
