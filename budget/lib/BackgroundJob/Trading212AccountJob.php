@@ -4,18 +4,21 @@ declare(strict_types=1);
 
 namespace OCA\Budget\BackgroundJob;
 
-use OCP\BackgroundJob\TimedJob;
+use OCA\Budget\AppInfo\Application;
+use OCA\Budget\Db\BillMapper;
+use OCA\Budget\Service\BillService;
+use OCA\Budget\Service\SettingService;
 use OCP\AppFramework\Utility\ITimeFactory;
-use OCP\DB\QueryBuilder\IQueryBuilder;
+use OCP\BackgroundJob\TimedJob;
 use OCP\IDBConnection;
-use OCP\Http\Client\IClientService;
+use OCP\Notification\IManager as INotificationManager;
+use OCP\Server;
 use Psr\Log\LoggerInterface;
 
 class Trading212AccountJob extends TimedJob
 {
     private IDBConnection $db;
-    private IClientService $clientService;
-    private ILogger $logger;
+    private LoggerInterface $logger;
 
     public function __construct(ITimeFactory $time) {
         parent::__construct($time);
@@ -30,9 +33,8 @@ class Trading212AccountJob extends TimedJob
 
         $server = \OC::$server;
 
-        $db = $server->get(IDBConnection::class);
-        $clientService = $server->get(IClientService::class);
-        $logger = $server::get(LoggerInterface::class);
+        $this->db  = Server::get(IDBConnection::class);
+        $this->logger = Server::get(LoggerInterface::class);
 
         $table = 'budget_accounts';
 
@@ -44,8 +46,6 @@ class Trading212AccountJob extends TimedJob
         if (count($rows) === 0) {
             return;
         }
-
-        $client = $this->clientService->newClient();
 
         foreach ($rows as $row) {
             $id = (int)$row['id'];
