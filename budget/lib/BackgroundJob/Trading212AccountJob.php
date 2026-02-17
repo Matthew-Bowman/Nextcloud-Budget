@@ -16,7 +16,8 @@ class Trading212AccountJob extends TimedJob
     private IDBConnection $db;
     private LoggerInterface $logger;
 
-    public function __construct(ITimeFactory $time) {
+    public function __construct(ITimeFactory $time)
+    {
         parent::__construct($time);
 
         // Run once per day
@@ -87,9 +88,14 @@ class Trading212AccountJob extends TimedJob
             ->where($qb->expr()->eq('type', $qb->createNamedParameter('investment-tracked_212')))
             ->setMaxResults($limit);
 
-        
+
         $result = $qb->executeQuery();
-        
+
+        $this->logger->debug('Processing result', [
+            'app' => 'budget',
+            'data' => $result
+        ]);
+
         $rows = [];
         while ($row = $result->fetch()) {
             $rows[] = $row;
