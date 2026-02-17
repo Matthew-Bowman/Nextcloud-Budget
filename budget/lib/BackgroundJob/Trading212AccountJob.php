@@ -91,8 +91,14 @@ class Trading212AccountJob extends TimedJob
             ->where($qb->expr()->eq('type', $qb->createNamedParameter('investment-tracked_212')))
             ->setMaxResults($limit);
 
+        
         $result = $qb->executeQuery();
-        $rows = $result->fetchAllAssociative();
+        
+        $rows = []
+        while ($row = $result->fetch()) {
+            $rows[] = $row;
+        }
+
         $result->closeCursor();
 
         return $rows;
