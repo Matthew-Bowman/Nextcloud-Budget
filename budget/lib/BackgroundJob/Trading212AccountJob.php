@@ -4,14 +4,10 @@ declare(strict_types=1);
 
 namespace OCA\Budget\BackgroundJob;
 
-use OCA\Budget\AppInfo\Application;
-use OCA\Budget\Db\BillMapper;
-use OCA\Budget\Service\BillService;
-use OCA\Budget\Service\SettingService;
 use OCP\AppFramework\Utility\ITimeFactory;
+use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IDBConnection;
-use OCP\Notification\IManager as INotificationManager;
 use OCP\Server;
 use Psr\Log\LoggerInterface;
 
