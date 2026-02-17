@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\YourApp\BackgroundJob;
+namespace OCA\budget\BackgroundJob;
 
 use OCP\BackgroundJob\TimedJob;
 use OCP\DB\QueryBuilder\IQueryBuilder;
