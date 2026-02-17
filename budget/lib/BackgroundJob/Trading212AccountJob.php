@@ -69,7 +69,6 @@ class Trading212AccountJob extends TimedJob
                     );
 
                 $qb->executeStatement();
-                
             } catch (\Throwable $e) {
                 $this->logger->error('Background job failed for row ' . $id . ': ' . $e->getMessage(), [
                     'app' => 'budget',
@@ -106,7 +105,35 @@ class Trading212AccountJob extends TimedJob
 
     private function doLogic(string $apiKey, $secretKey): string
     {
-        // Put your transformation here
+
+        $curl = curl_init();
+
+        curl_setopt_array($curl, [
+            CURLOPT_HTTPHEADER => [
+                "Authorization: $apiKey",
+                "Authorization: Basic " . base64_encode("$apiKey:$secretKey")
+            ],
+            CURLOPT_URL => "https://live.trading212.com/api/v0/equity/account/summary",
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CUSTOMREQUEST => "GET",
+        ]);
+
+        $response = curl_exec($curl);
+        $error = curl_error($curl);
+
+        curl_close($curl);
+
+        if ($error) {
+
+            $this->logger->error('[Trading212AccountJob] - Failed API Request', [
+                'app' => 'budget',
+                'exception' => $error,
+            ]);
+        } else {
+            $this->logger->debug($response, ['app' => 'budget']);
+        }
+
+
         return '420.69';
     }
 }
