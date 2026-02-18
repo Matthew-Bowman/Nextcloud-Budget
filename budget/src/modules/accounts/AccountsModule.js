@@ -1759,7 +1759,12 @@ export default class AccountsModule {
                 icon: 'icon-category-monitoring',
                 color: '#9013FE',
                 label: 'Cash'
-            }
+            },
+            'investment-tracked_212': {
+                icon: 'icon-trading212',
+                color: '#2d2d2d',
+                label: 'Trading212'
+            },
         };
 
         return typeMap[accountType] || {
