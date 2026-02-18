@@ -1,6 +1,7 @@
 <?php
 script('budget', 'budget-main');
 style('budget', 'style');
+style('budget', 'icons');
 style('budget', 'budget-main');
 ?>
 
