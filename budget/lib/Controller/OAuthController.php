@@ -18,6 +18,7 @@ class OAuthController extends Controller
     }
 
     /**
+     * @PublicPage
      * @NoAdminRequired
      * @NoCSRFRequired
      */
