@@ -1761,7 +1761,7 @@ export default class AccountsModule {
                 label: 'Cash'
             },
             'investment-tracked_212': {
-                icon: 'icon-trading212',
+                icon: 'icon-budget-trading212',
                 color: '#2d2d2d',
                 label: 'Trading212'
             },
