@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 return [
     'routes' => [
+        // OAuth routes
+        ['name' => 'oauth#monzoCallback', 'url' => '/oauth/monzo/callback', 'verb' => 'GET'],
+
         // Page routes
         ['name' => 'page#index', 'url' => '/', 'verb' => 'GET'],
         
