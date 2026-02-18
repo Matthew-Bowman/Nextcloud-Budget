@@ -10,7 +10,7 @@ use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IRequest;
 use OCP\Util;
 
-class OAuthController extends Controller
+class OauthController extends Controller
 {
     public function __construct(IRequest $request)
     {
@@ -24,7 +24,6 @@ class OAuthController extends Controller
      */
     public function monzoCallback(): TemplateResponse
     {
-
         die('Test');
     }
 }
