@@ -156,7 +156,7 @@
 }
 
 #app-navigation .app-navigation-entry.active a {
-    background-color: blue;
+    background-color: var(--color-primary);
     color: white;
     font-weight: 600;
 }
