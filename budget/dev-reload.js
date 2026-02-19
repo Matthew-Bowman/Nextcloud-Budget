@@ -20,6 +20,6 @@ const watcher = chokidar.watch(
 watcher.on("all", (event, filePath) => {
     console.log("Changed:", event, filePath);
     wss.clients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) client.send("reload");
+        if (client.readyState === WebSocket.OPEN) client.send(JSON.stringify({ message: 'reload', path: filePath }));
     });
 });

@@ -36,6 +36,36 @@ import ImportModule from './modules/import/ImportModule.js';
 import AccountsModule from './modules/accounts/AccountsModule.js';
 import CategoriesModule from './modules/categories/CategoriesModule.js';
 
+function reloadCssFile(changedPath) {
+    changedPath = changedPath.replace(/\\/g, "/");
+
+    const links = document.querySelectorAll('link[rel="stylesheet"][href]');
+    for (const link of links) {
+        const hrefPath = new URL(link.href, location.href).pathname;
+
+        // Match by suffix so it works regardless of Nextcloud base path
+        if (hrefPath.endsWith("/" + changedPath) || hrefPath.endsWith(changedPath)) {
+            const url = new URL(link.href, location.href);
+            // Busts the caching
+            url.searchParams.set("v", Date.now().toString());
+            link.href = url.toString();
+            return true;
+        }
+    }
+    return false;
+}
+
+(function () {
+    const ws = new WebSocket("wss://nextcloud.home.lab/dev-reload/");
+
+    ws.onmessage = function (pMessage) {
+        const data = JSON.parse(pMessage.data);
+
+        const parsedPath = '/custom_apps/budget/' + data.path;
+        const ok = reloadCssFile(parsedPath);
+    };
+})();
+
 class BudgetApp {
     constructor() {
         this.currentView = 'dashboard';
@@ -2471,13 +2501,13 @@ class BudgetApp {
         if (recommendationEl && comparison.comparison) {
             const c = comparison.comparison;
             let recClass = c.recommendation === 'avalanche' ? 'recommend-avalanche' :
-                           c.recommendation === 'snowball' ? 'recommend-snowball' : 'recommend-either';
+                c.recommendation === 'snowball' ? 'recommend-snowball' : 'recommend-either';
 
             recommendationEl.innerHTML = `
                 <div class="recommendation-box ${recClass}">
                     <div class="recommendation-title">
                         ${c.recommendation === 'avalanche' ? 'Avalanche Recommended' :
-                          c.recommendation === 'snowball' ? 'Snowball Recommended' : 'Either Works'}
+                    c.recommendation === 'snowball' ? 'Snowball Recommended' : 'Either Works'}
                     </div>
                     <div class="recommendation-text">${this.escapeHtml(c.explanation)}</div>
                     ${c.interestSavedByAvalanche > 0 ? `<div class="recommendation-savings">Avalanche saves ${this.formatCurrency(c.interestSavedByAvalanche, currency)} in interest</div>` : ''}
