@@ -8,7 +8,8 @@
     "dev": "webpack --mode development",
     "watch": "webpack --mode development --watch",
     "lint": "eslint js/",
-    "lint:fix": "eslint js/ --fix"
+    "lint:fix": "eslint js/ --fix",
+    "dev:bs": "browser-sync start --config bs-config.js"
   },
   "repository": {
     "type": "git",
