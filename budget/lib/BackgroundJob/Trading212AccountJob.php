@@ -39,7 +39,6 @@ class Trading212AccountJob extends TimedJob
 
         $table = 'budget_accounts';
 
-        // Limit each run so you don’t overload remote services
         $batchSize = 50;
 
         $rows = $this->fetchCandidateRows($table, $batchSize);
@@ -53,7 +52,6 @@ class Trading212AccountJob extends TimedJob
 
             try {
 
-                // --- Your logic using a column ---
                 $trading212ApiKeyId = (string)$row['trading212_api_key_id'];
                 $trading212ApiSecretKey = (string)$row['trading212_api_secret_key'];
                 $computed = $this->doLogic($trading212ApiKeyId, $trading212ApiSecretKey);
@@ -65,6 +63,7 @@ class Trading212AccountJob extends TimedJob
                         'balance',
                         $qb->createNamedParameter($computed, IQueryBuilder::PARAM_STR)
                     )
+                    ->set('updated_at', $qb->createNamedParameter(date('Y-m-d H:i:s')))
                     ->where(
                         $qb->expr()->eq(
                             'id',
@@ -82,9 +81,6 @@ class Trading212AccountJob extends TimedJob
         }
     }
 
-    /**
-     * Fetch rows where your condition is met (example: status = 'pending')
-     */
     private function fetchCandidateRows(string $table, int $limit): array
     {
         $qb = $this->db->getQueryBuilder();
