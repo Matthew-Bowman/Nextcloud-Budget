@@ -3,6 +3,7 @@
  */
 import * as formatters from '../../utils/formatters.js';
 import * as dom from '../../utils/dom.js';
+import { showSuccess, showError, showWarning } from '../../utils/notifications.js';
 
 export default class AccountsModule {
     constructor(app) {
@@ -416,6 +417,12 @@ export default class AccountsModule {
             // Populate account overview
             this.populateAccountOverview(account);
 
+            // Initialize account-specific state for fresh view
+            this.accountCurrentPage = 1;
+            this.accountRowsPerPage = 50;
+            this.accountFilters = {};
+            this.accountSort = { field: 'date', direction: 'desc' };
+
             // Load account transactions and metrics
             await this.loadAccountTransactions(accountId);
             await this.loadAccountMetrics(accountId);
@@ -425,7 +432,7 @@ export default class AccountsModule {
 
         } catch (error) {
             console.error('Failed to show account details:', error);
-            OC.Notification.showTemporary('Failed to load account details');
+            showError('Failed to load account details');
         }
     }
 
@@ -524,12 +531,6 @@ export default class AccountsModule {
 
     async loadAccountTransactions(accountId) {
         try {
-            // Initialize account-specific state
-            this.accountCurrentPage = 1;
-            this.accountRowsPerPage = 50;
-            this.accountFilters = {};
-            this.accountSort = { field: 'date', direction: 'desc' };
-
             // Build query for account-specific transactions
             const params = new URLSearchParams({
                 accountId: accountId,
@@ -538,6 +539,17 @@ export default class AccountsModule {
                 sort: this.accountSort.field,
                 direction: this.accountSort.direction
             });
+
+            // Apply active filters to query params
+            const filters = this.accountFilters || {};
+            if (filters.category) params.set('category', filters.category);
+            if (filters.type) params.set('type', filters.type);
+            if (filters.status) params.set('reconciled', filters.status === 'cleared' ? '1' : '0');
+            if (filters.dateFrom) params.set('dateFrom', filters.dateFrom);
+            if (filters.dateTo) params.set('dateTo', filters.dateTo);
+            if (filters.amountMin) params.set('amountMin', filters.amountMin);
+            if (filters.amountMax) params.set('amountMax', filters.amountMax);
+            if (filters.search) params.set('search', filters.search);
 
             const response = await fetch(OC.generateUrl('/apps/budget/api/transactions?' + params.toString()), {
                 headers: { 'requesttoken': OC.requestToken }
@@ -608,15 +620,18 @@ export default class AccountsModule {
             return { ...transaction, balanceAtTime };
         }).reverse();
 
+        const today = new Date().toISOString().split('T')[0];
         tbody.innerHTML = transactionsWithBalance.map(transaction => {
             const amount = parseFloat(transaction.amount) || 0;
             const currency = this.currentAccount?.currency || this.getPrimaryCurrency();
             const category = this.categories?.find(c => c.id === transaction.categoryId);
+            const isPending = transaction.date > today;
+            const pendingBadge = isPending ? '<span class="pending-badge">Pending</span>' : '';
 
             return `
-                <tr class="transaction-row" data-transaction-id="${transaction.id}">
+                <tr class="transaction-row${isPending ? ' pending-transaction' : ''}" data-transaction-id="${transaction.id}">
                     <td class="date-column">
-                        <span class="transaction-date">${this.formatDate(transaction.date)}</span>
+                        <span class="transaction-date">${this.formatDate(transaction.date)}</span>${pendingBadge}
                     </td>
                     <td class="description-column">
                         <div class="transaction-description">
@@ -809,6 +824,7 @@ export default class AccountsModule {
         this.accountFilters = {
             category: document.getElementById('account-filter-category')?.value || '',
             type: document.getElementById('account-filter-type')?.value || '',
+            status: document.getElementById('account-filter-status')?.value || '',
             dateFrom: document.getElementById('account-filter-date-from')?.value || '',
             dateTo: document.getElementById('account-filter-date-to')?.value || '',
             amountMin: document.getElementById('account-filter-amount-min')?.value || '',
@@ -825,6 +841,7 @@ export default class AccountsModule {
         // Clear all filter inputs
         document.getElementById('account-filter-category').value = '';
         document.getElementById('account-filter-type').value = '';
+        document.getElementById('account-filter-status').value = '';
         document.getElementById('account-filter-date-from').value = '';
         document.getElementById('account-filter-date-to').value = '';
         document.getElementById('account-filter-amount-min').value = '';
@@ -852,13 +869,13 @@ export default class AccountsModule {
 
     finishReconciliation() {
         if (!this.reconcileData || !this.reconcileData.isBalanced) {
-            OC.Notification.showTemporary('Cannot finish reconciliation - balances do not match');
+            showWarning('Cannot finish reconciliation - balances do not match');
             return;
         }
 
         // Mark all checked transactions as reconciled and finish reconciliation
         this.cancelReconciliation();
-        OC.Notification.showTemporary('Reconciliation completed successfully');
+        showSuccess('Reconciliation completed successfully');
     }
 
     async loadCategories() {
@@ -922,26 +939,26 @@ export default class AccountsModule {
 
         if (!accountId) {
             if (!Array.isArray(this.accounts) || this.accounts.length === 0) {
-                OC.Notification.showTemporary('No accounts available. Please create an account first.');
+                showWarning('No accounts available. Please create an account first.');
                 return;
             }
-            OC.Notification.showTemporary('Please select an account');
+            showWarning('Please select an account');
             return;
         }
         if (!date) {
-            OC.Notification.showTemporary('Please enter a date');
+            showWarning('Please enter a date');
             return;
         }
         if (!type) {
-            OC.Notification.showTemporary('Please select a transaction type');
+            showWarning('Please select a transaction type');
             return;
         }
         if (amount === null || amount <= 0) {
-            OC.Notification.showTemporary('Please enter a valid amount');
+            showWarning('Please enter a valid amount');
             return;
         }
         if (!description) {
-            OC.Notification.showTemporary('Please enter a description');
+            showWarning('Please enter a description');
             return;
         }
 
@@ -985,7 +1002,7 @@ export default class AccountsModule {
                     await this.saveTransactionTags(savedTransactionId, selectedTagIds);
                 }
 
-                OC.Notification.showTemporary('Transaction saved successfully');
+                showSuccess('Transaction saved successfully');
                 this.hideModals();
                 this.loadTransactions();
                 // Also reload account transactions if we're on account details view
@@ -1007,7 +1024,7 @@ export default class AccountsModule {
             }
         } catch (error) {
             console.error('Failed to save transaction:', error);
-            OC.Notification.showTemporary(error.message || 'Failed to save transaction');
+            showError(error.message || 'Failed to save transaction');
         }
     }
 
@@ -1192,13 +1209,13 @@ export default class AccountsModule {
 
             if (!nameElement) {
                 console.error('Account name element not found');
-                OC.Notification.showTemporary('Form error: Account name field not found');
+                showError('Form error: Account name field not found');
                 return;
             }
 
             if (!typeElement) {
                 console.error('Account type element not found');
-                OC.Notification.showTemporary('Form error: Account type field not found');
+                showError('Form error: Account type field not found');
                 return;
             }
 
@@ -1259,28 +1276,28 @@ export default class AccountsModule {
             // Validate required fields on frontend
             if (!formData.name || formData.name === '') {
                 console.error('Account name is empty');
-                OC.Notification.showTemporary('Please enter an account name');
+                showWarning('Please enter an account name');
                 nameElement.focus();
                 return;
             }
 
             if (!formData.type || formData.type === '') {
                 console.error('Account type is empty');
-                OC.Notification.showTemporary('Please select an account type');
+                showWarning('Please select an account type');
                 typeElement.focus();
                 return;
             }
 
             // Validate account name length
             if (formData.name.length > 255) {
-                OC.Notification.showTemporary('Account name is too long (maximum 255 characters)');
+                showWarning('Account name is too long (maximum 255 characters)');
                 nameElement.focus();
                 return;
             }
 
             // Validate numeric fields
             if (isNaN(formData.balance)) {
-                OC.Notification.showTemporary('Please enter a valid balance amount');
+                showWarning('Please enter a valid balance amount');
                 document.getElementById('account-balance').focus();
                 return;
             }
@@ -1312,7 +1329,7 @@ export default class AccountsModule {
                     }
                 }
 
-                OC.Notification.showTemporary('Account saved successfully');
+                showSuccess('Account saved successfully');
                 this.hideModals();
                 await this.loadAccounts();
                 await this.loadInitialData(); // Refresh dropdowns
@@ -1357,7 +1374,7 @@ export default class AccountsModule {
 
             // Show specific error message if available
             const errorMsg = error.message || 'Unknown error occurred';
-            OC.Notification.showTemporary(`Failed to save account: ${errorMsg}`);
+            showError(`Failed to save account: ${errorMsg}`);
 
             // Don't hide modal on error so user can fix and retry
         }
@@ -1441,7 +1458,7 @@ export default class AccountsModule {
             document.getElementById('account-overdraft-limit').value = account.overdraftLimit || '';
         } catch (error) {
             console.error('Failed to load account data:', error);
-            OC.Notification.showTemporary('Failed to load account data');
+            showError('Failed to load account data');
         }
     }
 
@@ -1480,7 +1497,7 @@ export default class AccountsModule {
             });
 
             if (response.ok) {
-                OC.Notification.showTemporary('Account deleted successfully');
+                showSuccess('Account deleted successfully');
                 await this.loadAccounts();
                 await this.loadInitialData(); // Refresh dropdowns
 
@@ -1494,7 +1511,7 @@ export default class AccountsModule {
             }
         } catch (error) {
             console.error('Failed to delete account:', error);
-            OC.Notification.showTemporary('Failed to delete account: ' + error.message);
+            showError('Failed to delete account: ' + error.message);
         }
     }
 

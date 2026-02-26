@@ -348,6 +348,29 @@
     flex: 1;
 }
 
+.hero-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.hero-inline-select {
+    font-size: 11px;
+    padding: 2px 6px;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    background: var(--color-main-background);
+    color: var(--color-text-maxcontrast);
+    max-width: 120px;
+    cursor: pointer;
+}
+
+.hero-inline-select:hover {
+    border-color: var(--color-primary);
+}
+
 .hero-label {
     font-size: 12px;
     color: var(--color-text-maxcontrast);
@@ -9080,6 +9103,42 @@ button.danger:hover {
     background: var(--color-primary-element-lighter, rgba(0, 130, 201, 0.15));
 }
 
+/* Pending (future-dated) transaction styling */
+.pending-transaction {
+    opacity: 0.65;
+    font-style: italic;
+}
+
+.pending-transaction:hover {
+    opacity: 0.85;
+}
+
+.pending-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    background: var(--color-warning-light, rgba(230, 150, 0, 0.15));
+    color: var(--color-warning-text, #b35e00);
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-style: normal;
+    margin-left: 6px;
+}
+
+/* Also style pending rows in the main transactions table (non-account view) */
+tr.pending-transaction {
+    opacity: 0.65;
+    font-style: italic;
+}
+
+tr.pending-transaction:hover {
+    opacity: 0.85;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .source-details {
@@ -13646,4 +13705,53 @@ button.danger:hover {
     .heatmap-grid {
         grid-template-columns: 1fr;
     }
+}
+
+/* ── Toast Notifications ── */
+
+#budget-toast-container {
+    position: fixed;
+    top: 50px;
+    right: 10px;
+    z-index: 11000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+}
+
+.budget-toast {
+    padding: 10px 20px;
+    border-radius: var(--border-radius-large, 6px);
+    color: #fff;
+    font-size: 14px;
+    max-width: 400px;
+    word-break: break-word;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    transform: translateX(40px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.budget-toast--visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.budget-toast-success {
+    background-color: var(--color-success, #46ba61);
+}
+
+.budget-toast-error {
+    background-color: var(--color-error, #e9322d);
+}
+
+.budget-toast-warning {
+    background-color: var(--color-warning, #eca700);
+}
+
+.budget-toast-info {
+    background-color: var(--color-primary, #0082c9);
 }

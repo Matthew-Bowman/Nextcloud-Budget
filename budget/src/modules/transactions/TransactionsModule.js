@@ -12,6 +12,7 @@
 
 import * as formatters from '../../utils/formatters.js';
 import * as dom from '../../utils/dom.js';
+import { showSuccess, showError, showWarning } from '../../utils/notifications.js';
 
 export default class TransactionsModule {
     constructor(app) {
@@ -86,7 +87,7 @@ export default class TransactionsModule {
 
         // Filter controls
         const filterControls = [
-            'filter-account', 'filter-category', 'filter-type',
+            'filter-account', 'filter-category', 'filter-type', 'filter-status',
             'filter-date-from', 'filter-date-to', 'filter-amount-min',
             'filter-amount-max', 'filter-search'
         ];
@@ -336,6 +337,7 @@ export default class TransactionsModule {
             account: document.getElementById('filter-account')?.value || '',
             category: document.getElementById('filter-category')?.value || '',
             type: document.getElementById('filter-type')?.value || '',
+            status: document.getElementById('filter-status')?.value || '',
             dateFrom: document.getElementById('filter-date-from')?.value || '',
             dateTo: document.getElementById('filter-date-to')?.value || '',
             amountMin: document.getElementById('filter-amount-min')?.value || '',
@@ -350,7 +352,7 @@ export default class TransactionsModule {
 
     clearFilters() {
         const filterInputs = [
-            'filter-account', 'filter-category', 'filter-type',
+            'filter-account', 'filter-category', 'filter-type', 'filter-status',
             'filter-date-from', 'filter-date-to', 'filter-amount-min',
             'filter-amount-max', 'filter-search'
         ];
@@ -516,17 +518,17 @@ export default class TransactionsModule {
             const result = await response.json();
 
             if (result.success > 0) {
-                OC.Notification.showTemporary(`Successfully deleted ${result.success} transaction(s)`);
+                showSuccess(`Successfully deleted ${result.success} transaction(s)`);
                 this.selectedTransactions.clear();
                 this.app.loadTransactions();
             }
 
             if (result.failed > 0) {
-                OC.Notification.showTemporary(`Failed to delete ${result.failed} transaction(s)`, { type: 'error' });
+                showError(`Failed to delete ${result.failed} transaction(s)`);
             }
         } catch (error) {
             console.error('Bulk deletion failed:', error);
-            OC.Notification.showTemporary('Failed to delete transactions');
+            showError('Failed to delete transactions');
         }
     }
 
@@ -555,17 +557,17 @@ export default class TransactionsModule {
             const result = await response.json();
 
             if (result.success > 0) {
-                OC.Notification.showTemporary(`Successfully reconciled ${result.success} transaction(s)`);
+                showSuccess(`Successfully reconciled ${result.success} transaction(s)`);
                 this.selectedTransactions.clear();
                 this.app.loadTransactions();
             }
 
             if (result.failed > 0) {
-                OC.Notification.showTemporary(`Failed to reconcile ${result.failed} transaction(s)`, { type: 'error' });
+                showError(`Failed to reconcile ${result.failed} transaction(s)`);
             }
         } catch (error) {
             console.error('Bulk reconcile failed:', error);
-            OC.Notification.showTemporary('Failed to reconcile transactions');
+            showError('Failed to reconcile transactions');
         }
     }
 
@@ -594,17 +596,17 @@ export default class TransactionsModule {
             const result = await response.json();
 
             if (result.success > 0) {
-                OC.Notification.showTemporary(`Successfully unreconciled ${result.success} transaction(s)`);
+                showSuccess(`Successfully unreconciled ${result.success} transaction(s)`);
                 this.selectedTransactions.clear();
                 this.app.loadTransactions();
             }
 
             if (result.failed > 0) {
-                OC.Notification.showTemporary(`Failed to unreconcile ${result.failed} transaction(s)`, { type: 'error' });
+                showError(`Failed to unreconcile ${result.failed} transaction(s)`);
             }
         } catch (error) {
             console.error('Bulk unreconcile failed:', error);
-            OC.Notification.showTemporary('Failed to unreconcile transactions');
+            showError('Failed to unreconcile transactions');
         }
     }
 
@@ -655,7 +657,7 @@ export default class TransactionsModule {
         if (notes) updates.notes = notes;
 
         if (Object.keys(updates).length === 0) {
-            OC.Notification.showTemporary('Please fill in at least one field to update');
+            showWarning('Please fill in at least one field to update');
             return;
         }
 
@@ -679,7 +681,7 @@ export default class TransactionsModule {
             const result = await response.json();
 
             if (result.success > 0) {
-                OC.Notification.showTemporary(`Successfully updated ${result.success} transaction(s)`);
+                showSuccess(`Successfully updated ${result.success} transaction(s)`);
                 this.selectedTransactions.clear();
                 this.app.loadTransactions();
 
@@ -688,11 +690,11 @@ export default class TransactionsModule {
             }
 
             if (result.failed > 0) {
-                OC.Notification.showTemporary(`Failed to update ${result.failed} transaction(s)`, { type: 'error' });
+                showError(`Failed to update ${result.failed} transaction(s)`);
             }
         } catch (error) {
             console.error('Bulk edit failed:', error);
-            OC.Notification.showTemporary('Failed to update transactions');
+            showError('Failed to update transactions');
         }
     }
 
@@ -719,7 +721,7 @@ export default class TransactionsModule {
         const statementDate = document.getElementById('reconcile-statement-date').value;
 
         if (!accountId || !statementBalance || !statementDate) {
-            OC.Notification.showTemporary('Please fill in all reconciliation fields');
+            showWarning('Please fill in all reconciliation fields');
             return;
         }
 
@@ -782,10 +784,10 @@ export default class TransactionsModule {
             document.getElementById('reconcile-panel').style.display = 'none';
             this.showReconcileInfo(result);
 
-            OC.Notification.showTemporary('Reconciliation mode started');
+            showSuccess('Reconciliation mode started');
         } catch (error) {
             console.error('Reconciliation failed:', error);
-            OC.Notification.showTemporary('Failed to start reconciliation: ' + error.message);
+            showError('Failed to start reconciliation: ' + error.message);
         }
     }
 
@@ -865,18 +867,22 @@ export default class TransactionsModule {
 
     // Rendering
     renderTransactionsTable(transactions) {
+        const today = new Date().toISOString().split('T')[0];
         return transactions.map(t => {
             const isSplit = t.isSplit || t.is_split;
+            const isPending = t.date > today;
+            const rowClasses = [isSplit ? 'split-transaction' : '', isPending ? 'pending-transaction' : ''].filter(Boolean).join(' ');
             const categoryDisplay = isSplit
                 ? '<span class="split-indicator" title="This transaction is split across multiple categories">Split</span>'
                 : (t.categoryName ? `<span class="category-name">${this.escapeHtml(t.categoryName)}</span>` : '-');
+            const pendingBadge = isPending ? '<span class="pending-badge">Pending</span>' : '';
 
             return `
-            <tr class="${isSplit ? 'split-transaction' : ''}">
+            <tr class="${rowClasses}">
                 <td class="select-column">
                     <input type="checkbox" class="transaction-checkbox" data-transaction-id="${t.id}">
                 </td>
-                <td>${this.formatDate(t.date)}</td>
+                <td>${this.formatDate(t.date)}${pendingBadge}</td>
                 <td>${this.escapeHtml(t.description)}</td>
                 <td>${categoryDisplay}</td>
                 <td class="amount ${t.type}">${this.formatCurrency(t.amount, t.accountCurrency)}</td>
@@ -1095,11 +1101,11 @@ export default class TransactionsModule {
 
             // Validation
             if (!toAccountId) {
-                OC.Notification.showTemporary('Please select destination account');
+                showWarning('Please select destination account');
                 return;
             }
             if (toAccountId === accountId) {
-                OC.Notification.showTemporary('Cannot transfer to same account');
+                showWarning('Cannot transfer to same account');
                 return;
             }
 
@@ -1174,7 +1180,7 @@ export default class TransactionsModule {
                 }
 
                 // Success
-                OC.Notification.showTemporary('Transfer created successfully');
+                showSuccess('Transfer created successfully');
                 this.app.hideModals();
                 await this.app.loadTransactions();
                 await this.app.loadAccounts();
@@ -1189,7 +1195,7 @@ export default class TransactionsModule {
                 return;
             } catch (error) {
                 console.error('Transfer creation failed:', error);
-                OC.Notification.showTemporary(error.message || 'Failed to create transfer');
+                showError(error.message || 'Failed to create transfer');
                 return;
             }
         }
@@ -1231,7 +1237,7 @@ export default class TransactionsModule {
             }
 
             if (response.ok) {
-                OC.Notification.showTemporary(id ? 'Transaction updated' : 'Transaction created');
+                showSuccess(id ? 'Transaction updated' : 'Transaction created');
                 this.app.hideModals();
                 await this.app.loadTransactions();
                 await this.app.loadAccounts(); // Refresh account balances
@@ -1249,7 +1255,7 @@ export default class TransactionsModule {
             }
         } catch (error) {
             console.error('Failed to save transaction:', error);
-            OC.Notification.showTemporary(error.message || 'Failed to save transaction');
+            showError(error.message || 'Failed to save transaction');
         }
     }
 
@@ -1267,7 +1273,7 @@ export default class TransactionsModule {
             });
 
             if (response.ok) {
-                OC.Notification.showTemporary('Transaction deleted');
+                showSuccess('Transaction deleted');
                 await this.app.loadTransactions();
                 await this.app.loadAccounts(); // Refresh account balances
 
@@ -1281,7 +1287,7 @@ export default class TransactionsModule {
             }
         } catch (error) {
             console.error('Failed to delete transaction:', error);
-            OC.Notification.showTemporary('Failed to delete transaction');
+            showError('Failed to delete transaction');
         }
     }
 
@@ -1345,7 +1351,7 @@ export default class TransactionsModule {
     async showMatchingModal(transactionId) {
         const transaction = this.transactions?.find(t => t.id === transactionId);
         if (!transaction) {
-            OC.Notification.showTemporary('Transaction not found');
+            showWarning('Transaction not found');
             return;
         }
 
@@ -1410,13 +1416,13 @@ export default class TransactionsModule {
     async handleLinkMatch(sourceId, targetId) {
         try {
             await this.linkTransactions(sourceId, targetId);
-            OC.Notification.showTemporary('Transactions linked as transfer');
+            showSuccess('Transactions linked as transfer');
 
             // Close modal and refresh transactions
             document.getElementById('matching-modal').style.display = 'none';
             await this.app.loadTransactions();
         } catch (error) {
-            OC.Notification.showTemporary(error.message || 'Failed to link transactions');
+            showError(error.message || 'Failed to link transactions');
         }
     }
 
@@ -1427,10 +1433,10 @@ export default class TransactionsModule {
 
         try {
             await this.unlinkTransaction(transactionId);
-            OC.Notification.showTemporary('Transaction unlinked');
+            showSuccess('Transaction unlinked');
             await this.app.loadTransactions();
         } catch (error) {
-            OC.Notification.showTemporary(error.message || 'Failed to unlink transaction');
+            showError(error.message || 'Failed to unlink transaction');
         }
     }
 
@@ -1438,7 +1444,7 @@ export default class TransactionsModule {
     async showSplitModal(transactionId) {
         const transaction = this.transactions?.find(t => t.id === transactionId);
         if (!transaction) {
-            OC.Notification.showTemporary('Transaction not found');
+            showWarning('Transaction not found');
             return;
         }
 
@@ -1611,13 +1617,13 @@ export default class TransactionsModule {
 
         // Validate
         if (splits.length < 2) {
-            OC.Notification.showTemporary('A split transaction must have at least 2 parts');
+            showWarning('A split transaction must have at least 2 parts');
             return;
         }
 
         const splitTotal = splits.reduce((sum, s) => sum + s.amount, 0);
         if (Math.abs(splitTotal - totalAmount) > 0.01) {
-            OC.Notification.showTemporary(`Split amounts (${splitTotal.toFixed(2)}) must equal transaction amount (${totalAmount.toFixed(2)})`);
+            showWarning(`Split amounts (${splitTotal.toFixed(2)}) must equal transaction amount (${totalAmount.toFixed(2)})`);
             return;
         }
 
@@ -1637,11 +1643,11 @@ export default class TransactionsModule {
             }
 
             this.hideSplitModal();
-            OC.Notification.showTemporary('Transaction split successfully');
+            showSuccess('Transaction split successfully');
             await this.app.loadTransactions();
         } catch (error) {
             console.error('Failed to save splits:', error);
-            OC.Notification.showTemporary(error.message || 'Failed to save splits');
+            showError(error.message || 'Failed to save splits');
         }
     }
 
@@ -1665,11 +1671,11 @@ export default class TransactionsModule {
             }
 
             this.hideSplitModal();
-            OC.Notification.showTemporary('Transaction unsplit successfully');
+            showSuccess('Transaction unsplit successfully');
             await this.app.loadTransactions();
         } catch (error) {
             console.error('Failed to unsplit transaction:', error);
-            OC.Notification.showTemporary(error.message || 'Failed to unsplit transaction');
+            showError(error.message || 'Failed to unsplit transaction');
         }
     }
 
@@ -1854,9 +1860,9 @@ export default class TransactionsModule {
                 document.getElementById('auto-matched-section').style.display = 'none';
             }
 
-            OC.Notification.showTemporary('Match undone');
+            showSuccess('Match undone');
         } catch (error) {
-            OC.Notification.showTemporary(error.message || 'Failed to undo match');
+            showError(error.message || 'Failed to undo match');
         }
     }
 
@@ -1865,7 +1871,7 @@ export default class TransactionsModule {
         const selectedRadio = reviewItem.querySelector(`input[name="review-match-${index}"]:checked`);
 
         if (!selectedRadio) {
-            OC.Notification.showTemporary('Please select a match first');
+            showWarning('Please select a match first');
             return;
         }
 
@@ -1892,9 +1898,9 @@ export default class TransactionsModule {
                 document.getElementById('needs-review-section').style.display = 'none';
             }
 
-            OC.Notification.showTemporary('Transactions linked');
+            showSuccess('Transactions linked');
         } catch (error) {
-            OC.Notification.showTemporary(error.message || 'Failed to link transactions');
+            showError(error.message || 'Failed to link transactions');
         }
     }
 
@@ -2520,13 +2526,13 @@ export default class TransactionsModule {
 
                 this.app.renderEnhancedTransactionsTable();
                 this.app.applyColumnVisibility();
-                OC.Notification.showTemporary('Transaction updated');
+                showSuccess('Transaction updated');
             } else {
                 throw new Error('Update failed');
             }
         } catch (error) {
             console.error('Failed to save inline edit:', error);
-            OC.Notification.showTemporary('Failed to update transaction');
+            showError('Failed to update transaction');
             this.cancelInlineEdit(cell);
         }
     }

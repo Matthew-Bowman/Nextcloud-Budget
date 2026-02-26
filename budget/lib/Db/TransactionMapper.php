@@ -256,7 +256,8 @@ class TransactionMapper extends QBMapper {
         string $startDate,
         string $endDate,
         array $tagIds = [],
-        bool $includeUntagged = true
+        bool $includeUntagged = true,
+        bool $excludeTransfers = false
     ): array {
         $qb = $this->db->getQueryBuilder();
         $qb->select('c.id', 'c.name', 'c.color', 'c.icon')
@@ -269,6 +270,10 @@ class TransactionMapper extends QBMapper {
             ->andWhere($qb->expr()->gte('t.date', $qb->createNamedParameter($startDate)))
             ->andWhere($qb->expr()->lte('t.date', $qb->createNamedParameter($endDate)))
             ->andWhere($qb->expr()->eq('t.type', $qb->createNamedParameter('debit')));
+
+        if ($excludeTransfers) {
+            $qb->andWhere($qb->expr()->isNull('t.linked_transaction_id'));
+        }
 
         // Apply tag filtering if requested
         $this->applyTagFilter($qb, $tagIds, $includeUntagged);
@@ -290,7 +295,7 @@ class TransactionMapper extends QBMapper {
         $qb = $this->db->getQueryBuilder();
 
         // Use SUBSTR with CAST for month extraction (compatible with SQLite, MySQL, PostgreSQL)
-        $qb->select($qb->createFunction('SUBSTR(t.date, 1, 7) as month'))
+        $qb->select($qb->createFunction('SUBSTR(CAST(t.date AS CHAR(10)), 1, 7) as month'))
             ->selectAlias($qb->func()->sum('t.amount'), 'total')
             ->selectAlias($qb->func()->count('t.id'), 'count')
             ->from($this->getTableName(), 't')
@@ -304,8 +309,8 @@ class TransactionMapper extends QBMapper {
             $qb->andWhere($qb->expr()->eq('t.account_id', $qb->createNamedParameter($accountId, IQueryBuilder::PARAM_INT)));
         }
 
-        $qb->groupBy($qb->createFunction('SUBSTR(t.date, 1, 7)'))
-            ->orderBy($qb->createFunction('SUBSTR(t.date, 1, 7)'), 'ASC');
+        $qb->groupBy($qb->createFunction('SUBSTR(CAST(t.date AS CHAR(10)), 1, 7)'))
+            ->orderBy($qb->createFunction('SUBSTR(CAST(t.date AS CHAR(10)), 1, 7)'), 'ASC');
 
         $result = $qb->executeQuery();
         $data = $result->fetchAll();
@@ -357,7 +362,7 @@ class TransactionMapper extends QBMapper {
     public function getIncomeByMonth(string $userId, ?int $accountId, string $startDate, string $endDate): array {
         $qb = $this->db->getQueryBuilder();
 
-        $qb->select($qb->createFunction('SUBSTR(t.date, 1, 7) as month'))
+        $qb->select($qb->createFunction('SUBSTR(CAST(t.date AS CHAR(10)), 1, 7) as month'))
             ->selectAlias($qb->func()->sum('t.amount'), 'total')
             ->selectAlias($qb->func()->count('t.id'), 'count')
             ->from($this->getTableName(), 't')
@@ -371,8 +376,8 @@ class TransactionMapper extends QBMapper {
             $qb->andWhere($qb->expr()->eq('t.account_id', $qb->createNamedParameter($accountId, IQueryBuilder::PARAM_INT)));
         }
 
-        $qb->groupBy($qb->createFunction('SUBSTR(t.date, 1, 7)'))
-            ->orderBy($qb->createFunction('SUBSTR(t.date, 1, 7)'), 'ASC');
+        $qb->groupBy($qb->createFunction('SUBSTR(CAST(t.date AS CHAR(10)), 1, 7)'))
+            ->orderBy($qb->createFunction('SUBSTR(CAST(t.date AS CHAR(10)), 1, 7)'), 'ASC');
 
         $result = $qb->executeQuery();
         $data = $result->fetchAll();
@@ -427,11 +432,12 @@ class TransactionMapper extends QBMapper {
         string $startDate,
         string $endDate,
         array $tagIds = [],
-        bool $includeUntagged = true
+        bool $includeUntagged = true,
+        bool $excludeTransfers = false
     ): array {
         $qb = $this->db->getQueryBuilder();
 
-        $qb->select($qb->createFunction('SUBSTR(t.date, 1, 7) as month'))
+        $qb->select($qb->createFunction('SUBSTR(CAST(t.date AS CHAR(10)), 1, 7) as month'))
             ->selectAlias(
                 $qb->createFunction('SUM(CASE WHEN t.type = \'credit\' THEN t.amount ELSE 0 END)'),
                 'income'
@@ -450,11 +456,15 @@ class TransactionMapper extends QBMapper {
             $qb->andWhere($qb->expr()->eq('t.account_id', $qb->createNamedParameter($accountId, IQueryBuilder::PARAM_INT)));
         }
 
+        if ($excludeTransfers) {
+            $qb->andWhere($qb->expr()->isNull('t.linked_transaction_id'));
+        }
+
         // Apply tag filtering if requested
         $this->applyTagFilter($qb, $tagIds, $includeUntagged);
 
-        $qb->groupBy($qb->createFunction('SUBSTR(t.date, 1, 7)'))
-            ->orderBy($qb->createFunction('SUBSTR(t.date, 1, 7)'), 'ASC');
+        $qb->groupBy($qb->createFunction('SUBSTR(CAST(t.date AS CHAR(10)), 1, 7)'))
+            ->orderBy($qb->createFunction('SUBSTR(CAST(t.date AS CHAR(10)), 1, 7)'), 'ASC');
 
         $result = $qb->executeQuery();
         $data = $result->fetchAll();
@@ -518,6 +528,50 @@ class TransactionMapper extends QBMapper {
         }
 
         return $summaries;
+    }
+
+    /**
+     * Get aggregate transfer totals (linked transactions) for a user in a date range.
+     * Used to subtract transfers from all-accounts aggregation to avoid double-counting.
+     *
+     * @param int[] $tagIds Optional tag filter (OR logic)
+     * @param bool $includeUntagged Include untagged transactions when filtering by tags
+     * @return array{income: float, expenses: float}
+     */
+    public function getTransferTotals(
+        string $userId,
+        string $startDate,
+        string $endDate,
+        array $tagIds = [],
+        bool $includeUntagged = true
+    ): array {
+        $qb = $this->db->getQueryBuilder();
+
+        $qb->selectAlias(
+                $qb->createFunction('SUM(CASE WHEN t.type = \'credit\' THEN t.amount ELSE 0 END)'),
+                'income'
+            )
+            ->selectAlias(
+                $qb->createFunction('SUM(CASE WHEN t.type = \'debit\' THEN t.amount ELSE 0 END)'),
+                'expenses'
+            )
+            ->from($this->getTableName(), 't')
+            ->innerJoin('t', 'budget_accounts', 'a', $qb->expr()->eq('t.account_id', 'a.id'))
+            ->where($qb->expr()->eq('a.user_id', $qb->createNamedParameter($userId)))
+            ->andWhere($qb->expr()->gte('t.date', $qb->createNamedParameter($startDate)))
+            ->andWhere($qb->expr()->lte('t.date', $qb->createNamedParameter($endDate)))
+            ->andWhere($qb->expr()->isNotNull('t.linked_transaction_id'));
+
+        $this->applyTagFilter($qb, $tagIds, $includeUntagged);
+
+        $result = $qb->executeQuery();
+        $row = $result->fetch();
+        $result->closeCursor();
+
+        return [
+            'income' => (float)($row['income'] ?? 0),
+            'expenses' => (float)($row['expenses'] ?? 0),
+        ];
     }
 
     /**
@@ -685,12 +739,13 @@ class TransactionMapper extends QBMapper {
         string $startDate,
         string $endDate,
         array $tagIds = [],
-        bool $includeUntagged = true
+        bool $includeUntagged = true,
+        bool $excludeTransfers = false
     ): array {
         $qb = $this->db->getQueryBuilder();
 
         // SQLite-compatible: dates stored as TEXT in YYYY-MM-DD format, no need for CAST
-        $qb->select($qb->createFunction('SUBSTR(t.date, 1, 7) as month'))
+        $qb->select($qb->createFunction('SUBSTR(CAST(t.date AS CHAR(10)), 1, 7) as month'))
             ->selectAlias(
                 $qb->createFunction('SUM(CASE WHEN t.type = \'credit\' THEN t.amount ELSE 0 END)'),
                 'income'
@@ -709,11 +764,15 @@ class TransactionMapper extends QBMapper {
             $qb->andWhere($qb->expr()->eq('t.account_id', $qb->createNamedParameter($accountId, IQueryBuilder::PARAM_INT)));
         }
 
+        if ($excludeTransfers) {
+            $qb->andWhere($qb->expr()->isNull('t.linked_transaction_id'));
+        }
+
         // Apply tag filtering if requested
         $this->applyTagFilter($qb, $tagIds, $includeUntagged);
 
-        $qb->groupBy($qb->createFunction('SUBSTR(t.date, 1, 7)'))
-            ->orderBy($qb->createFunction('SUBSTR(t.date, 1, 7)'), 'ASC');
+        $qb->groupBy($qb->createFunction('SUBSTR(CAST(t.date AS CHAR(10)), 1, 7)'))
+            ->orderBy($qb->createFunction('SUBSTR(CAST(t.date AS CHAR(10)), 1, 7)'), 'ASC');
 
         $result = $qb->executeQuery();
         $data = $result->fetchAll();
@@ -1444,7 +1503,7 @@ class TransactionMapper extends QBMapper {
 
         $qb = $this->db->getQueryBuilder();
 
-        $qb->select($qb->createFunction('SUBSTR(t.date, 1, 7) as month'))
+        $qb->select($qb->createFunction('SUBSTR(CAST(t.date AS CHAR(10)), 1, 7) as month'))
             ->addSelect('tag.id as tag_id', 'tag.name as tag_name', 'tag.color')
             ->selectAlias($qb->func()->sum('t.amount'), 'total')
             ->from($this->getTableName(), 't')
@@ -1461,8 +1520,8 @@ class TransactionMapper extends QBMapper {
             $qb->andWhere($qb->expr()->eq('t.account_id', $qb->createNamedParameter($accountId, IQueryBuilder::PARAM_INT)));
         }
 
-        $qb->groupBy($qb->createFunction('SUBSTR(t.date, 1, 7)'), 'tag.id', 'tag.name', 'tag.color')
-            ->orderBy($qb->createFunction('SUBSTR(t.date, 1, 7)'), 'ASC')
+        $qb->groupBy($qb->createFunction('SUBSTR(CAST(t.date AS CHAR(10)), 1, 7)'), 'tag.id', 'tag.name', 'tag.color')
+            ->orderBy($qb->createFunction('SUBSTR(CAST(t.date AS CHAR(10)), 1, 7)'), 'ASC')
             ->addOrderBy('tag.id', 'ASC');
 
         $result = $qb->executeQuery();
