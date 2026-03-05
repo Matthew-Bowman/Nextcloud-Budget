@@ -43,6 +43,7 @@ class AccountService extends AbstractCrudService {
         ?float $minimumPayment = null,
         ?string $trading212ApiKeyId = null,
         ?string $trading212ApiSecretKey = null,
+        ?string $walletAddress = null
     ): Account {
         $account = new Account();
         $account->setUserId($userId);
@@ -56,6 +57,7 @@ class AccountService extends AbstractCrudService {
         $account->setSortCode($sortCode);
         $account->setIban($iban);
         $account->setSwiftBic($swiftBic);
+        $account->setWalletAddress($walletAddress);
         $account->setAccountHolderName($accountHolderName);
         $account->setOpeningDate($openingDate);
         $account->setInterestRate($interestRate);

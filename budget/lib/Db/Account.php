@@ -37,6 +37,8 @@ use OCP\AppFramework\Db\Entity;
  * @method void setIban(?string $iban)
  * @method string|null getSwiftBic()
  * @method void setSwiftBic(?string $swiftBic)
+ * @method string|null getWalletAddress()
+ * @method void setWalletAddress(?string $walletAddress)
  * @method string|null getAccountHolderName()
  * @method void setAccountHolderName(?string $accountHolderName)
  * @method string|null getOpeningDate()
@@ -79,6 +81,9 @@ class Account extends Entity implements JsonSerializable {
 
     protected $trading212ApiKeyId;
     protected $trading212ApiSecretKey;
+    #[Encrypted]
+    protected $walletAddress;
+
     protected $accountHolderName;
     protected $openingDate;
     protected $interestRate;
@@ -145,6 +150,7 @@ class Account extends Entity implements JsonSerializable {
             'sortCode' => $this->maskSortCode($this->getSortCode()),
             'iban' => $this->maskIban($this->getIban()),
             'swiftBic' => $this->maskSwiftBic($this->getSwiftBic()),
+            'walletAddress' => $this->maskWalletAddress($this->getWalletAddress()),
             'accountHolderName' => $this->getAccountHolderName(),
             'openingDate' => $this->getOpeningDate(),
             'interestRate' => $this->getInterestRate(),
@@ -177,6 +183,7 @@ class Account extends Entity implements JsonSerializable {
             'sortCode' => $this->getSortCode(),
             'iban' => $this->getIban(),
             'swiftBic' => $this->getSwiftBic(),
+            'walletAddress' => $this->getWalletAddress(),
             'accountHolderName' => $this->getAccountHolderName(),
             'openingDate' => $this->getOpeningDate(),
             'interestRate' => $this->getInterestRate(),
@@ -196,7 +203,8 @@ class Account extends Entity implements JsonSerializable {
             || !empty($this->getRoutingNumber())
             || !empty($this->getSortCode())
             || !empty($this->getIban())
-            || !empty($this->getSwiftBic());
+            || !empty($this->getSwiftBic())
+            || !empty($this->getWalletAddress());
     }
 
     /**
@@ -209,6 +217,7 @@ class Account extends Entity implements JsonSerializable {
         if (!empty($this->getSortCode())) $fields[] = 'sortCode';
         if (!empty($this->getIban())) $fields[] = 'iban';
         if (!empty($this->getSwiftBic())) $fields[] = 'swiftBic';
+        if (!empty($this->getWalletAddress())) $fields[] = 'walletAddress';
         return $fields;
     }
 
@@ -298,5 +307,21 @@ class Account extends Entity implements JsonSerializable {
         $last = substr($value, -3);
         $middleLength = strlen($value) - 7;
         return $first . str_repeat('*', $middleLength) . $last;
+    }
+
+    /**
+     * Mask wallet address: show first 6 and last 6 characters.
+     * Example: "0x1234567890abcdef1234567890abcdef12345678" -> "0x1234...345678"
+     */
+    private function maskWalletAddress(?string $value): ?string {
+        if ($value === null || strlen($value) < 12) {
+            return $value;
+        }
+        if (str_starts_with($value, 'enc:')) {
+            return '[DECRYPTION FAILED]';
+        }
+        $first = substr($value, 0, 6);
+        $last = substr($value, -6);
+        return $first . '...' . $last;
     }
 }

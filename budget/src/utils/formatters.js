@@ -58,6 +58,32 @@ const CURRENCY_CONFIG = {
     'NGN': { symbol: '₦', position: 'prefix' },
     'KES': { symbol: 'KSh', position: 'prefix' },
     'ZAR': { symbol: 'R', position: 'prefix' },
+    // Cryptocurrencies (suffix position: "0.50000000 BTC")
+    'BTC': { symbol: 'BTC', position: 'suffix', decimals: 8 },
+    'ETH': { symbol: 'ETH', position: 'suffix', decimals: 8 },
+    'XRP': { symbol: 'XRP', position: 'suffix', decimals: 6 },
+    'SOL': { symbol: 'SOL', position: 'suffix', decimals: 8 },
+    'ADA': { symbol: 'ADA', position: 'suffix', decimals: 6 },
+    'DOGE': { symbol: 'DOGE', position: 'suffix', decimals: 8 },
+    'DOT': { symbol: 'DOT', position: 'suffix', decimals: 8 },
+    'LTC': { symbol: 'LTC', position: 'suffix', decimals: 8 },
+    'LINK': { symbol: 'LINK', position: 'suffix', decimals: 8 },
+    'AVAX': { symbol: 'AVAX', position: 'suffix', decimals: 8 },
+    'UNI': { symbol: 'UNI', position: 'suffix', decimals: 8 },
+    'ATOM': { symbol: 'ATOM', position: 'suffix', decimals: 6 },
+    'XLM': { symbol: 'XLM', position: 'suffix', decimals: 7 },
+    'ALGO': { symbol: 'ALGO', position: 'suffix', decimals: 6 },
+    'NEAR': { symbol: 'NEAR', position: 'suffix', decimals: 8 },
+    'FIL': { symbol: 'FIL', position: 'suffix', decimals: 8 },
+    'APT': { symbol: 'APT', position: 'suffix', decimals: 8 },
+    'ARB': { symbol: 'ARB', position: 'suffix', decimals: 8 },
+    'OP': { symbol: 'OP', position: 'suffix', decimals: 8 },
+    'USDT': { symbol: 'USDT', position: 'suffix', decimals: 6 },
+    'USDC': { symbol: 'USDC', position: 'suffix', decimals: 6 },
+    'DAI': { symbol: 'DAI', position: 'suffix', decimals: 8 },
+    'BNB': { symbol: 'BNB', position: 'suffix', decimals: 8 },
+    'MATIC': { symbol: 'MATIC', position: 'suffix', decimals: 8 },
+    'SHIB': { symbol: 'SHIB', position: 'suffix', decimals: 8 },
 };
 
 /**
@@ -69,7 +95,9 @@ const CURRENCY_CONFIG = {
  */
 export function formatCurrency(amount, currency, settings) {
     const currencyCode = currency || getPrimaryCurrency([], settings);
-    const decimals = parseInt(settings.number_format_decimals) || 2;
+    const config = CURRENCY_CONFIG[currencyCode] || { symbol: currencyCode, position: 'prefix' };
+    // Use currency-native decimals for crypto, user setting for fiat
+    const decimals = config.decimals !== undefined ? config.decimals : (parseInt(settings.number_format_decimals) || 2);
     const decimalSep = settings.number_format_decimal_sep || '.';
     const thousandsSep = settings.number_format_thousands_sep ?? ',';
 
@@ -79,8 +107,6 @@ export function formatCurrency(amount, currency, settings) {
     const intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, thousandsSep);
     const decPart = parts[1] || '';
 
-    // Get currency configuration (symbol + position)
-    const config = CURRENCY_CONFIG[currencyCode] || { symbol: currencyCode, position: 'prefix' };
     const { symbol, position } = config;
 
     const formattedNumber = decimals > 0 ? `${intPart}${decimalSep}${decPart}` : intPart;
@@ -101,33 +127,7 @@ export function formatCurrency(amount, currency, settings) {
  * @returns {string} Primary currency code
  */
 export function getPrimaryCurrency(accounts, settings) {
-    // Get default currency from settings (matches backend SettingController default of 'GBP')
-    const defaultCurrency = settings?.default_currency || 'GBP';
-
-    // Default fallback to user's setting
-    if (!Array.isArray(accounts) || accounts.length === 0) {
-        return defaultCurrency;
-    }
-
-    // Weight currencies by absolute balance (same logic as backend ForecastService)
-    const currencyWeights = {};
-    accounts.forEach(account => {
-        const currency = account.currency || defaultCurrency;
-        const balance = Math.abs(parseFloat(account.balance) || 0);
-        currencyWeights[currency] = (currencyWeights[currency] || 0) + balance;
-    });
-
-    // Find currency with highest weight
-    let primaryCurrency = defaultCurrency;
-    let maxWeight = 0;
-    for (const [currency, weight] of Object.entries(currencyWeights)) {
-        if (weight > maxWeight) {
-            maxWeight = weight;
-            primaryCurrency = currency;
-        }
-    }
-
-    return primaryCurrency;
+    return settings?.default_currency || 'GBP';
 }
 
 /**
@@ -183,7 +183,8 @@ export function formatAccountType(type) {
         cash: 'Cash',
         loan: 'Loan',
         mortgage: 'Mortgage',
-        pension: 'Pension'
+        pension: 'Pension',
+        cryptocurrency: 'Cryptocurrency'
     };
     return typeNames[type] || type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
@@ -234,15 +235,6 @@ export function formatCurrencyCompact(value, currency, settings) {
     }
 }
 
-/**
- * Generate hash of accounts for caching purposes
- * @param {array} accounts - Array of account objects
- * @returns {string} Hash string
- */
-export function getAccountsHash(accounts) {
-    if (!Array.isArray(accounts)) return '';
-    return accounts.map(a => `${a.id}:${a.currency}:${a.balance}`).join('|');
-}
 
 /**
  * Format a Date object as YYYY-MM-DD without timezone conversion.
@@ -291,12 +283,39 @@ export function getMonthEnd(year, month) {
 }
 
 /**
+ * Parse a YYYY-MM-DD date string as local midnight (not UTC).
+ * Avoids timezone issues where new Date("YYYY-MM-DD") creates UTC midnight.
+ *
+ * @param {string} dateStr - Date string in YYYY-MM-DD format
+ * @returns {Date} Date object at local midnight
+ */
+export function parseLocalDate(dateStr) {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day);
+}
+
+/**
+ * Calculate the number of days between two YYYY-MM-DD date strings.
+ * Positive result means dateStr2 is after dateStr1.
+ *
+ * @param {string} dateStr1 - First date (YYYY-MM-DD)
+ * @param {string} dateStr2 - Second date (YYYY-MM-DD)
+ * @returns {number} Number of days between dates
+ */
+export function daysBetweenDates(dateStr1, dateStr2) {
+    const date1 = parseLocalDate(dateStr1);
+    const date2 = parseLocalDate(dateStr2);
+    return Math.round((date2 - date1) / (1000 * 60 * 60 * 24));
+}
+
+/**
  * Get date range for a budget period.
  *
  * @param {string} period - Period type: 'weekly', 'monthly', 'quarterly', 'yearly'
+ * @param {number} [startDay=1] - Day of month when budget cycle starts (1-31, monthly only)
  * @returns {object} Object with {start, end, label} date strings
  */
-export function getPeriodDateRange(period) {
+export function getPeriodDateRange(period, startDay = 1) {
     const now = new Date();
 
     switch (period) {
@@ -318,14 +337,55 @@ export function getPeriodDateRange(period) {
         }
 
         case 'monthly': {
-            // 1st to last day of current month
-            const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-            const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            if (startDay <= 1) {
+                // Default: 1st to last day of current month
+                const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+                const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+                return {
+                    start: formatDateForAPI(monthStart),
+                    end: formatDateForAPI(monthEnd),
+                    label: now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+                };
+            }
+
+            // Custom start day: clamp to days in month
+            const currentDay = now.getDate();
+            const daysInCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            const effectiveStartDay = Math.min(startDay, daysInCurrentMonth);
+
+            let periodStart, periodEnd;
+
+            if (currentDay >= effectiveStartDay) {
+                // Period started this month
+                periodStart = new Date(now.getFullYear(), now.getMonth(), effectiveStartDay);
+
+                // End is day before start day next month
+                const nextMonth = now.getMonth() + 1;
+                const daysInNextMonth = new Date(now.getFullYear(), nextMonth + 1, 0).getDate();
+                const nextStartDay = Math.min(startDay, daysInNextMonth);
+                const nextPeriodStart = new Date(now.getFullYear(), nextMonth, nextStartDay);
+                periodEnd = new Date(nextPeriodStart.getTime() - 86400000);
+            } else {
+                // Period started last month
+                const prevMonth = now.getMonth() - 1;
+                const daysInPrevMonth = new Date(now.getFullYear(), prevMonth + 1, 0).getDate();
+                const prevStartDay = Math.min(startDay, daysInPrevMonth);
+                periodStart = new Date(now.getFullYear(), prevMonth, prevStartDay);
+
+                // End is day before start day this month
+                const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), effectiveStartDay);
+                periodEnd = new Date(thisMonthStart.getTime() - 86400000);
+            }
+
+            const label = periodStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                + ' \u2013 '
+                + periodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
             return {
-                start: formatDateForAPI(monthStart),
-                end: formatDateForAPI(monthEnd),
-                label: now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+                start: formatDateForAPI(periodStart),
+                end: formatDateForAPI(periodEnd),
+                label
             };
         }
 
@@ -357,7 +417,7 @@ export function getPeriodDateRange(period) {
 
         default:
             // Default to monthly
-            return getPeriodDateRange('monthly');
+            return getPeriodDateRange('monthly', startDay);
     }
 }
 
