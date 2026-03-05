@@ -134,16 +134,6 @@ style('budget', 'budget-main');
                 Pensions
             </a>
         </li>
-        <li class="app-navigation-entry" data-id="assets">
-            <a href="#assets" class="nav-icon-assets svg">
-                <span class="app-navigation-entry-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M10,2V4.26L12,5.59V4H22V19H17V21H24V2H10M7.5,5L0,10V21H15V10L7.5,5M14,6V6.93L15.61,8H16V6H14M18,6V8H20V6H18M7.5,7.5L13,11V19H10V13H5V19H2V11L7.5,7.5M18,10V12H20V10H18M18,14V16H20V14H18Z"/>
-                    </svg>
-                </span>
-                Assets
-            </a>
-        </li>
         <li class="app-navigation-entry" data-id="shared-expenses">
             <a href="#shared-expenses" class="nav-icon-split svg">
                 <span class="app-navigation-entry-icon">
@@ -205,16 +195,6 @@ style('budget', 'budget-main');
                         </svg>
                     </span>
                     Rules
-                </a>
-            </li>
-            <li class="app-navigation-entry" data-id="exchange-rates">
-                <a href="#exchange-rates" class="nav-icon-exchange-rates svg">
-                    <span class="app-navigation-entry-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M7.5,21.5L3.75,17.75L5.16,16.34L6.75,17.92V12.5H8.25V17.92L9.84,16.34L11.25,17.75L7.5,21.5M16.5,6.5L12.75,2.75L14.16,4.16L15.75,2.58V8H17.25V2.58L18.84,4.16L20.25,2.75L16.5,6.5M3,8V6H11V8H3M13,18V16H21V18H13M7,14V12H17V14H7Z"/>
-                        </svg>
-                    </span>
-                    Exchange Rates
                 </a>
             </li>
             <li class="app-navigation-entry" data-id="settings">
@@ -335,19 +315,6 @@ style('budget', 'budget-main');
                         <span class="hero-label">Pension Worth</span>
                         <span id="hero-pension-value" class="hero-value">--</span>
                         <span id="hero-pension-count" class="hero-subtext"></span>
-                    </div>
-                </div>
-
-                <div class="hero-card hero-assets" data-widget-id="assets" data-widget-category="hero">
-                    <div class="hero-icon assets">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M10,2V4.26L12,5.59V4H22V19H17V21H24V2H10M7.5,5L0,10V21H15V10L7.5,5M14,6V6.93L15.61,8H16V6H14M18,6V8H20V6H18M7.5,7.5L13,11V19H10V13H5V19H2V11L7.5,7.5M18,10V12H20V10H18M18,14V16H20V14H18Z"/>
-                        </svg>
-                    </div>
-                    <div class="hero-content">
-                        <span class="hero-label">Assets Worth</span>
-                        <span id="hero-assets-value" class="hero-value">--</span>
-                        <span id="hero-assets-count" class="hero-subtext"></span>
                     </div>
                 </div>
 
@@ -1124,7 +1091,7 @@ style('budget', 'budget-main');
                                 <select id="account-filter-status">
                                     <option value="">All</option>
                                     <option value="cleared">Cleared</option>
-                                    <option value="scheduled">Scheduled</option>
+                                    <option value="pending">Pending</option>
                                 </select>
                             </div>
                             <div class="filter-group">
@@ -1257,7 +1224,7 @@ style('budget', 'budget-main');
                             <select id="filter-status">
                                 <option value="">All</option>
                                 <option value="cleared">Cleared</option>
-                                <option value="scheduled">Scheduled</option>
+                                <option value="pending">Pending</option>
                             </select>
                         </div>
 
@@ -2002,7 +1969,7 @@ style('budget', 'budget-main');
         <!-- Bills View -->
         <div id="bills-view" class="view">
             <div class="view-header">
-                <h2>Bills</h2>
+                <h2>Recurring Bills</h2>
                 <div class="view-controls">
                     <button id="detect-bills-btn" class="secondary" title="Auto-detect recurring bills from transactions">
                         <span class="icon-search" aria-hidden="true"></span>
@@ -2935,7 +2902,7 @@ style('budget', 'budget-main');
                         </div>
                         <div class="control-group">
                             <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                <input type="checkbox" id="bills-calendar-include-transfers" checked>
+                                <input type="checkbox" id="bills-calendar-include-transfers">
                                 <span>Include Recurring Transfers</span>
                             </label>
                         </div>
@@ -3165,34 +3132,21 @@ style('budget', 'budget-main');
         </div>
 
         <!-- Pension Modal (Add/Edit) -->
-        <div id="pension-modal" class="modal" style="display: none;" role="dialog" aria-labelledby="pension-modal-title" aria-hidden="true">
-            <div class="modal-content">
-                <div class="pension-modal-header">
-                    <div class="pension-modal-title-row">
-                        <div class="pension-modal-icon">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z"/>
-                            </svg>
-                        </div>
-                        <h3 id="pension-modal-title">Add Pension</h3>
-                    </div>
+        <div id="pension-modal" class="modal" style="display: none;">
+            <div class="modal-content modal-medium">
+                <div class="modal-header">
+                    <h3 id="pension-modal-title">Add Pension</h3>
                     <button class="modal-close cancel-btn" aria-label="Close">&times;</button>
                 </div>
-                <form id="pension-form">
-                    <input type="hidden" id="pension-id" name="id" value="">
+                <form id="pension-form" class="modal-form">
+                    <div class="form-group">
+                        <label for="pension-name">Pension Name *</label>
+                        <input type="text" id="pension-name" name="name" required placeholder="e.g., Company Pension, Vanguard SIPP">
+                    </div>
 
-                    <!-- Basic Information -->
-                    <div class="form-section">
-                        <h4>Basic Information</h4>
-
+                    <div class="form-row">
                         <div class="form-group">
-                            <label for="pension-name">Pension Name <span class="required">*</span></label>
-                            <input type="text" id="pension-name" name="name" required placeholder="e.g., Company Pension, Vanguard SIPP" maxlength="255">
-                            <small class="form-text">A descriptive name for this pension</small>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="pension-type">Pension Type <span class="required">*</span></label>
+                            <label for="pension-type">Pension Type *</label>
                             <select id="pension-type" name="type" required>
                                 <option value="workplace">Workplace Pension</option>
                                 <option value="personal">Personal Pension</option>
@@ -3200,15 +3154,57 @@ style('budget', 'budget-main');
                                 <option value="defined_benefit">Defined Benefit</option>
                                 <option value="state">State Pension</option>
                             </select>
-                            <small class="form-text">Determines which fields are available below</small>
                         </div>
-
                         <div class="form-group">
                             <label for="pension-provider">Provider</label>
-                            <input type="text" id="pension-provider" name="provider" placeholder="e.g., Scottish Widows, Aviva" maxlength="255">
-                            <small class="form-text">Pension provider or scheme administrator</small>
+                            <input type="text" id="pension-provider" name="provider" placeholder="e.g., Scottish Widows">
+                        </div>
+                    </div>
+
+                    <!-- DC Pension Fields -->
+                    <div id="dc-pension-fields">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="pension-balance">Current Balance</label>
+                                <input type="number" id="pension-balance" name="currentBalance" min="0" step="0.01" placeholder="0.00">
+                            </div>
+                            <div class="form-group">
+                                <label for="pension-monthly">Monthly Contribution</label>
+                                <input type="number" id="pension-monthly" name="monthlyContribution" min="0" step="0.01" placeholder="0.00">
+                            </div>
                         </div>
 
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="pension-return">Expected Annual Return (%)</label>
+                                <input type="number" id="pension-return" name="expectedReturnRate" min="0" max="100" step="0.1" placeholder="5.0">
+                            </div>
+                            <div class="form-group">
+                                <label for="pension-retirement-age">Retirement Age</label>
+                                <input type="number" id="pension-retirement-age" name="retirementAge" min="18" max="100" placeholder="65">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DB/State Pension Fields -->
+                    <div id="db-pension-fields" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="pension-income">Projected Annual Income</label>
+                                <input type="number" id="pension-income" name="annualIncome" min="0" step="0.01" placeholder="0.00">
+                            </div>
+                            <div class="form-group">
+                                <label for="pension-transfer">Transfer Value</label>
+                                <input type="number" id="pension-transfer" name="transferValue" min="0" step="0.01" placeholder="0.00">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="pension-db-retirement-age">Retirement Age</label>
+                            <input type="number" id="pension-db-retirement-age" name="retirementAge" min="18" max="100" placeholder="65">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
                         <div class="form-group">
                             <label for="pension-currency">Currency</label>
                             <select id="pension-currency" name="currency">
@@ -3219,57 +3215,7 @@ style('budget', 'budget-main');
                         </div>
                     </div>
 
-                    <!-- DC Pension Fields -->
-                    <div id="dc-pension-fields" class="form-section pension-fields-section">
-                        <h4>Financial Details</h4>
-
-                        <div class="form-group">
-                            <label for="pension-balance">Current Balance</label>
-                            <input type="number" id="pension-balance" name="currentBalance" min="0" step="0.01" placeholder="0.00">
-                            <small class="form-text">Current total value of the pension pot</small>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="pension-monthly">Monthly Contribution</label>
-                            <input type="number" id="pension-monthly" name="monthlyContribution" min="0" step="0.01" placeholder="0.00">
-                            <small class="form-text">Combined employee and employer contribution</small>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="pension-return">Expected Annual Return (%)</label>
-                            <input type="number" id="pension-return" name="expectedReturnRate" min="0" max="100" step="0.1" placeholder="5.0">
-                            <small class="form-text">Estimated yearly growth rate for projections</small>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="pension-retirement-age">Retirement Age</label>
-                            <input type="number" id="pension-retirement-age" name="retirementAge" min="18" max="100" placeholder="65">
-                            <small class="form-text">Age you plan to start drawing this pension</small>
-                        </div>
-                    </div>
-
-                    <!-- DB/State Pension Fields -->
-                    <div id="db-pension-fields" class="form-section pension-fields-section" style="display: none;">
-                        <h4>Income Details</h4>
-
-                        <div class="form-group">
-                            <label for="pension-income">Projected Annual Income</label>
-                            <input type="number" id="pension-income" name="annualIncome" min="0" step="0.01" placeholder="0.00">
-                            <small class="form-text">Expected yearly income at retirement</small>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="pension-transfer">Transfer Value</label>
-                            <input type="number" id="pension-transfer" name="transferValue" min="0" step="0.01" placeholder="0.00">
-                            <small class="form-text">Cash equivalent transfer value (CETV) if known</small>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="pension-db-retirement-age">Retirement Age</label>
-                            <input type="number" id="pension-db-retirement-age" name="retirementAge" min="18" max="100" placeholder="65">
-                            <small class="form-text">Normal retirement age for this scheme</small>
-                        </div>
-                    </div>
+                    <input type="hidden" id="pension-id" name="id" value="">
 
                     <div class="modal-actions">
                         <button type="button" class="cancel-btn">Cancel</button>
@@ -3328,276 +3274,6 @@ style('budget', 'budget-main');
                     <div class="modal-actions">
                         <button type="button" class="cancel-btn">Cancel</button>
                         <button type="submit" class="primary">Log</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Assets View -->
-        <div id="assets-view" class="view">
-            <div class="view-header">
-                <h2>Assets</h2>
-                <button id="add-asset-btn" class="primary" aria-label="Add new asset">
-                    <span class="icon-add" aria-hidden="true"></span>
-                    Add Asset
-                </button>
-            </div>
-
-            <!-- Info Notice -->
-            <div class="assets-notice" style="background-color: rgba(100, 116, 139, 0.08); border: 1px solid rgba(100, 116, 139, 0.15); border-radius: 4px; padding: 12px 16px; margin: 16px 0; display: flex; align-items: flex-start; gap: 12px;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="rgba(100, 116, 139, 0.6)" style="flex-shrink: 0; margin-top: 2px;">
-                    <path d="M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,17H13V11H11V17Z"/>
-                </svg>
-                <div style="color: rgba(100, 116, 139, 0.85); font-size: 14px;">
-                    <strong>Note:</strong> Track non-cash assets like property, vehicles, and collectibles. Asset values and projections are estimates based on annual appreciation/depreciation rates. Actual values may vary depending on market conditions.
-                </div>
-            </div>
-
-            <!-- Assets Summary Cards -->
-            <div class="assets-summary">
-                <div class="summary-card">
-                    <div class="summary-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M10,2V4.26L12,5.59V4H22V19H17V21H24V2H10M7.5,5L0,10V21H15V10L7.5,5M14,6V6.93L15.61,8H16V6H14M18,6V8H20V6H18M7.5,7.5L13,11V19H10V13H5V19H2V11L7.5,7.5M18,10V12H20V10H18M18,14V16H20V14H18Z"/>
-                        </svg>
-                    </div>
-                    <div class="summary-content">
-                        <div class="summary-value" id="assets-total-worth">--</div>
-                        <div class="summary-label">Total Asset Worth</div>
-                    </div>
-                </div>
-                <div class="summary-card">
-                    <div class="summary-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M16,6L18.29,8.29L13.41,13.17L9.41,9.17L2,16.59L3.41,18L9.41,12L13.41,16L19.71,9.71L22,12V6H16Z"/>
-                        </svg>
-                    </div>
-                    <div class="summary-content">
-                        <div class="summary-value" id="assets-projected-value">--</div>
-                        <div class="summary-label">Projected Value (10yr)</div>
-                    </div>
-                </div>
-                <div class="summary-card">
-                    <div class="summary-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M19,3H14.82C14.4,1.84 13.3,1 12,1C10.7,1 9.6,1.84 9.18,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M12,3A1,1 0 0,1 13,4A1,1 0 0,1 12,5A1,1 0 0,1 11,4A1,1 0 0,1 12,3"/>
-                        </svg>
-                    </div>
-                    <div class="summary-content">
-                        <div class="summary-value" id="assets-count">0</div>
-                        <div class="summary-label">Total Assets</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Assets List -->
-            <div class="assets-container">
-                <div id="assets-list" class="assets-list">
-                    <!-- Asset cards will be rendered here -->
-                </div>
-
-                <div class="empty-assets" id="empty-assets" style="display: none;">
-                    <div class="empty-content">
-                        <svg width="64" height="64" viewBox="0 0 24 24" fill="currentColor" style="opacity: 0.5;">
-                            <path d="M10,2V4.26L12,5.59V4H22V19H17V21H24V2H10M7.5,5L0,10V21H15V10L7.5,5M14,6V6.93L15.61,8H16V6H14M18,6V8H20V6H18M7.5,7.5L13,11V19H10V13H5V19H2V11L7.5,7.5M18,10V12H20V10H18M18,14V16H20V14H18Z"/>
-                        </svg>
-                        <h3>No assets yet</h3>
-                        <p>Track your non-cash assets like property, vehicles, and collectibles to see your full net worth.</p>
-                        <button class="primary" id="empty-assets-add-btn">
-                            <span class="icon-add" aria-hidden="true"></span>
-                            Add Your First Asset
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Asset Detail Panel (shown when an asset is selected) -->
-            <div id="asset-detail-panel" class="asset-detail-panel" style="display: none;">
-                <div class="panel-header">
-                    <h3 id="asset-detail-name">Asset Details</h3>
-                    <div class="panel-actions">
-                        <button id="asset-edit-btn" class="icon-button" title="Edit asset">
-                            <span class="icon-rename" aria-hidden="true"></span>
-                        </button>
-                        <button id="asset-close-btn" class="icon-button" title="Close">
-                            <span class="icon-close" aria-hidden="true"></span>
-                        </button>
-                    </div>
-                </div>
-                <div class="panel-content">
-                    <div class="asset-detail-summary">
-                        <div class="detail-item">
-                            <span class="detail-label">Current Value</span>
-                            <span class="detail-value" id="asset-detail-value">--</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Type</span>
-                            <span class="detail-value" id="asset-detail-type">--</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Purchase Price</span>
-                            <span class="detail-value" id="asset-detail-purchase-price">--</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Purchase Date</span>
-                            <span class="detail-value" id="asset-detail-purchase-date">--</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Annual Change Rate</span>
-                            <span class="detail-value" id="asset-detail-rate">--</span>
-                        </div>
-                    </div>
-
-                    <div class="asset-detail-actions">
-                        <button id="update-value-btn" class="secondary">
-                            <span class="icon-add" aria-hidden="true"></span>
-                            Update Value
-                        </button>
-                    </div>
-
-                    <!-- Value History Chart -->
-                    <div class="asset-chart-section">
-                        <h4>Value History</h4>
-                        <div class="chart-container">
-                            <canvas id="asset-value-chart"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Projection Chart -->
-                    <div class="asset-chart-section">
-                        <h4>Projected Value</h4>
-                        <div class="chart-container">
-                            <canvas id="asset-projection-chart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Asset Modal (Add/Edit) -->
-        <div id="asset-modal" class="modal" style="display: none;" role="dialog" aria-labelledby="asset-modal-title" aria-hidden="true">
-            <div class="modal-content">
-                <div class="asset-modal-header">
-                    <div class="asset-modal-title-row">
-                        <div class="asset-modal-icon">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M10,2V4.26L12,5.59V4H22V19H17V21H24V2H10M7.5,5L0,10V21H15V10L7.5,5M14,6V6.93L15.61,8H16V6H14M18,6V8H20V6H18M7.5,7.5L13,11V19H10V13H5V19H2V11L7.5,7.5M18,10V12H20V10H18M18,14V16H20V14H18Z"/>
-                            </svg>
-                        </div>
-                        <h3 id="asset-modal-title">Add Asset</h3>
-                    </div>
-                    <button class="modal-close cancel-btn" aria-label="Close">&times;</button>
-                </div>
-                <form id="asset-form">
-                    <input type="hidden" id="asset-id" name="id" value="">
-
-                    <!-- Asset Identity -->
-                    <div class="form-section">
-                        <h4>Asset Details</h4>
-
-                        <div class="form-group">
-                            <label for="asset-name">Name <span class="required">*</span></label>
-                            <input type="text" id="asset-name" name="name" required placeholder="e.g., 42 Maple Street, Tesla Model 3" maxlength="255">
-                            <small class="form-text">A descriptive name for this asset</small>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="asset-type">Type <span class="required">*</span></label>
-                            <select id="asset-type" name="type" required>
-                                <option value="real_estate">Real Estate</option>
-                                <option value="vehicle">Vehicle</option>
-                                <option value="jewelry">Jewelry</option>
-                                <option value="collectibles">Collectibles</option>
-                                <option value="other">Other</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group" style="grid-column: 1 / -1;">
-                            <label for="asset-description">Description</label>
-                            <textarea id="asset-description" name="description" rows="2" placeholder="Optional notes about this asset"></textarea>
-                        </div>
-                    </div>
-
-                    <!-- Valuation -->
-                    <div class="form-section">
-                        <h4>Valuation</h4>
-
-                        <div class="form-group">
-                            <label for="asset-current-value">Current Value</label>
-                            <input type="number" id="asset-current-value" name="currentValue" step="0.01" min="0" placeholder="0.00">
-                            <small class="form-text">Today's estimated market value</small>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="asset-currency">Currency</label>
-                            <select id="asset-currency" name="currency">
-                                <option value="GBP">GBP</option>
-                                <option value="USD">USD</option>
-                                <option value="EUR">EUR</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="asset-purchase-price">Purchase Price</label>
-                            <input type="number" id="asset-purchase-price" name="purchasePrice" step="0.01" min="0" placeholder="0.00">
-                            <small class="form-text">Original acquisition cost</small>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="asset-purchase-date">Purchase Date</label>
-                            <input type="date" id="asset-purchase-date" name="purchaseDate">
-                        </div>
-                    </div>
-
-                    <!-- Growth -->
-                    <div class="form-section">
-                        <h4>Growth / Depreciation</h4>
-
-                        <div class="form-group" style="grid-column: 1 / -1;">
-                            <label for="asset-annual-change-rate">Annual Change Rate (%)</label>
-                            <input type="number" id="asset-annual-change-rate" name="annualChangeRate" step="0.1" placeholder="e.g., 3.5">
-                            <small class="form-text">Positive for appreciation (e.g., 3.5), negative for depreciation (e.g., -15). Used for value projections.</small>
-                        </div>
-                    </div>
-
-                    <div class="modal-actions">
-                        <button type="button" class="cancel-btn">Cancel</button>
-                        <button type="submit" class="primary" id="save-asset-btn">Save Asset</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Asset Value Update Modal -->
-        <div id="asset-value-modal" class="modal" style="display: none;" role="dialog" aria-labelledby="asset-value-modal-title" aria-hidden="true">
-            <div class="modal-content">
-                <div class="asset-modal-header">
-                    <div class="asset-modal-title-row">
-                        <div class="asset-modal-icon asset-modal-icon-update">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M16,6L18.29,8.29L13.41,13.17L9.41,9.17L2,16.59L3.41,18L9.41,12L13.41,16L19.71,9.71L22,12V6H16Z"/>
-                            </svg>
-                        </div>
-                        <h3 id="asset-value-modal-title">Update Value</h3>
-                    </div>
-                    <button class="modal-close cancel-btn" aria-label="Close">&times;</button>
-                </div>
-                <form id="asset-value-form">
-                    <div class="asset-value-form-body">
-                        <p class="asset-value-hint">Record a new valuation for this asset. This creates a snapshot in the value history.</p>
-                        <div class="form-group">
-                            <label for="asset-value-date">Date <span class="required">*</span></label>
-                            <input type="date" id="asset-value-date" name="date" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="asset-value-amount">Value <span class="required">*</span></label>
-                            <input type="number" id="asset-value-amount" name="value" step="0.01" min="0" required placeholder="0.00">
-                        </div>
-                        <input type="hidden" id="asset-value-asset-id" name="assetId" value="">
-                    </div>
-                    <div class="modal-actions">
-                        <button type="button" class="cancel-btn">Cancel</button>
-                        <button type="submit" class="primary">Update Value</button>
                     </div>
                 </form>
             </div>
@@ -3822,105 +3498,6 @@ style('budget', 'budget-main');
             </div>
         </div>
 
-        <!-- Exchange Rates View -->
-        <div id="exchange-rates-view" class="view">
-            <div class="view-header">
-                <h2>Exchange Rates</h2>
-                <div class="view-controls">
-                    <button id="refresh-rates-btn" class="secondary" title="Refresh rates from online sources">
-                        <span class="icon-play" aria-hidden="true"></span>
-                        Refresh Rates
-                    </button>
-                </div>
-            </div>
-
-            <!-- Info Notice -->
-            <div class="exchange-rates-notice" style="background-color: rgba(100, 116, 139, 0.08); border: 1px solid rgba(100, 116, 139, 0.15); border-radius: 4px; padding: 12px 16px; margin: 16px 0; display: flex; align-items: flex-start; gap: 12px;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="rgba(100, 116, 139, 0.6)" style="flex-shrink: 0; margin-top: 2px;">
-                    <path d="M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,17H13V11H11V17Z"/>
-                </svg>
-                <div style="color: rgba(100, 116, 139, 0.85); font-size: 14px;">
-                    Rates shown as <strong>1 base currency = X target currency</strong>.
-                    Fiat rates from <a href="https://www.floatrates.com" target="_blank" rel="noopener" style="color: var(--color-primary);">FloatRates</a>,
-                    crypto from <a href="https://www.coingecko.com" target="_blank" rel="noopener" style="color: var(--color-primary);">CoinGecko</a>.
-                    Manual overrides take priority over automatic rates.
-                </div>
-            </div>
-
-            <!-- Summary Cards -->
-            <div class="exchange-rates-summary">
-                <div class="summary-card">
-                    <div class="summary-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12.89,3L14.85,3.4L11.11,21L9.15,20.6L12.89,3M19.59,12L16,8.41V5.58L22.42,12L16,18.41V15.58L19.59,12M1.58,12L8,5.58V8.41L4.41,12L8,15.58V18.41L1.58,12Z"/>
-                        </svg>
-                    </div>
-                    <div class="summary-content">
-                        <div class="summary-value" id="rates-total-count">0</div>
-                        <div class="summary-label">Total Currencies</div>
-                    </div>
-                </div>
-                <div class="summary-card">
-                    <div class="summary-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M11,16.5L6.5,12L7.91,10.59L11,13.67L16.59,8.09L18,9.5L11,16.5Z"/>
-                        </svg>
-                    </div>
-                    <div class="summary-content">
-                        <div class="summary-value" id="rates-auto-count">0</div>
-                        <div class="summary-label">Auto Rates</div>
-                    </div>
-                </div>
-                <div class="summary-card">
-                    <div class="summary-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/>
-                        </svg>
-                    </div>
-                    <div class="summary-content">
-                        <div class="summary-value" id="rates-manual-count">0</div>
-                        <div class="summary-label">Manual Overrides</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Filter Tabs -->
-            <div class="exchange-rates-tabs">
-                <button class="tab-button active" data-filter="all">All</button>
-                <button class="tab-button" data-filter="fiat">Fiat</button>
-                <button class="tab-button" data-filter="crypto">Crypto</button>
-                <button class="tab-button" data-filter="manual">Manual Only</button>
-                <button class="tab-button" data-filter="no-rate">No Rate</button>
-            </div>
-
-            <!-- Rates List -->
-            <div class="exchange-rates-container">
-                <div id="exchange-rates-list" class="exchange-rates-list">
-                    <!-- Rate cards rendered by ExchangeRatesModule -->
-                </div>
-            </div>
-
-            <!-- Manual Rate Modal -->
-            <div id="manual-rate-modal" class="modal" style="display: none;" aria-hidden="true">
-                <div class="modal-content">
-                    <h3>Set Manual Exchange Rate</h3>
-                    <div class="modal-body">
-                        <p id="manual-rate-currency" class="manual-rate-currency-label"></p>
-                        <div class="form-group manual-rate-input-row">
-                            <label id="manual-rate-base-label" class="manual-rate-label"></label>
-                            <input type="number" id="manual-rate-value" step="any" min="0" class="manual-rate-input" />
-                            <span id="manual-rate-target-label" class="manual-rate-label"></span>
-                        </div>
-                        <input type="hidden" id="manual-rate-currency-input" />
-                    </div>
-                    <div class="modal-footer">
-                        <button id="manual-rate-cancel-btn" class="cancel-btn">Cancel</button>
-                        <button id="manual-rate-save-btn" class="primary">Save</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Settings View -->
         <div id="settings-view" class="view">
             <div class="view-header">
@@ -3964,15 +3541,6 @@ style('budget', 'budget-main');
                                 <option value="quarterly">Quarterly</option>
                                 <option value="yearly">Yearly</option>
                             </select>
-                        </div>
-
-                        <div class="setting-item">
-                            <label for="setting-budget-start-day">
-                                <strong><?php p($l->t('Budget Cycle Start Day')); ?></strong>
-                                <small><?php p($l->t('Day of the month when your budget cycle resets (1 = first of month, 31 = last day). Useful for aligning budgets with payday.')); ?></small>
-                            </label>
-                            <input type="number" id="setting-budget-start-day" class="setting-input"
-                                   min="1" max="31" step="1" value="1">
                         </div>
                     </div>
                 </div>
@@ -4416,7 +3984,6 @@ style('budget', 'budget-main');
                         <option value="investment-tracked_212">Tracked Investment Account (Trading212)</option>
                         <option value="loan">Loan Account</option>
                         <option value="cash">Cash</option>
-                        <option value="cryptocurrency">Cryptocurrency</option>
                     </select>
                     <small id="account-type-help" class="form-text">Select the type of account</small>
                 </div>
@@ -4510,12 +4077,6 @@ style('budget', 'budget-main');
                     <input type="text" id="form-swift-bic" aria-describedby="form-swift-bic-help" maxlength="11">
                     <small id="form-swift-bic-help" class="form-text">SWIFT/BIC code for international transfers</small>
                 </div>
-
-                <div class="form-group conditional" id="wallet-address-group">
-                    <label for="form-wallet-address">Wallet Address</label>
-                    <input type="text" id="form-wallet-address" aria-describedby="form-wallet-address-help" maxlength="255">
-                    <small id="form-wallet-address-help" class="form-text">Your wallet or exchange address (stored encrypted)</small>
-                </div>
             </div>
 
             <!-- Account Limits (conditional) -->
@@ -4576,7 +4137,6 @@ style('budget', 'budget-main');
                     <option value="quarterly">Quarterly</option>
                     <option value="semi-annually">Semi-Annually</option>
                     <option value="yearly">Yearly</option>
-                    <option value="one-time">One-Time</option>
                     <option value="custom">Custom</option>
                 </select>
                 <small id="bill-frequency-help" class="form-text">How often this bill is due</small>
@@ -4655,18 +4215,6 @@ style('budget', 'budget-main');
                 <label for="bill-notes">Notes</label>
                 <textarea id="bill-notes" aria-describedby="bill-notes-help" maxlength="500" rows="2" placeholder="Additional notes..."></textarea>
                 <small id="bill-notes-help" class="form-text">Any additional notes (optional)</small>
-            </div>
-
-            <div class="form-group" id="end-date-group">
-                <label for="bill-end-date">End Date</label>
-                <input type="date" id="bill-end-date" aria-describedby="bill-end-date-help">
-                <small id="bill-end-date-help" class="form-text">Bill will automatically stop after this date (optional)</small>
-            </div>
-
-            <div class="form-group" id="remaining-payments-group">
-                <label for="bill-remaining-payments">Remaining Payments</label>
-                <input type="number" id="bill-remaining-payments" min="1" aria-describedby="bill-remaining-payments-help" placeholder="e.g., 10">
-                <small id="bill-remaining-payments-help" class="form-text">Number of payments left before bill auto-deactivates (optional)</small>
             </div>
 
             <div class="form-group">

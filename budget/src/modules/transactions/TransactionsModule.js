@@ -520,7 +520,6 @@ export default class TransactionsModule {
             if (result.success > 0) {
                 showSuccess(`Successfully deleted ${result.success} transaction(s)`);
                 this.selectedTransactions.clear();
-                this.app.currentPage = 1;
                 this.app.loadTransactions();
             }
 
@@ -560,7 +559,6 @@ export default class TransactionsModule {
             if (result.success > 0) {
                 showSuccess(`Successfully reconciled ${result.success} transaction(s)`);
                 this.selectedTransactions.clear();
-                this.app.currentPage = 1;
                 this.app.loadTransactions();
             }
 
@@ -600,7 +598,6 @@ export default class TransactionsModule {
             if (result.success > 0) {
                 showSuccess(`Successfully unreconciled ${result.success} transaction(s)`);
                 this.selectedTransactions.clear();
-                this.app.currentPage = 1;
                 this.app.loadTransactions();
             }
 
@@ -686,7 +683,6 @@ export default class TransactionsModule {
             if (result.success > 0) {
                 showSuccess(`Successfully updated ${result.success} transaction(s)`);
                 this.selectedTransactions.clear();
-                this.app.currentPage = 1;
                 this.app.loadTransactions();
 
                 // Close modal
@@ -870,6 +866,40 @@ export default class TransactionsModule {
     }
 
     // Rendering
+    renderTransactionsTable(transactions) {
+        const today = new Date().toISOString().split('T')[0];
+        return transactions.map(t => {
+            const isSplit = t.isSplit || t.is_split;
+            const isPending = t.date > today;
+            const rowClasses = [isSplit ? 'split-transaction' : '', isPending ? 'pending-transaction' : ''].filter(Boolean).join(' ');
+            const categoryDisplay = isSplit
+                ? '<span class="split-indicator" title="This transaction is split across multiple categories">Split</span>'
+                : (t.categoryName ? `<span class="category-name">${this.escapeHtml(t.categoryName)}</span>` : '-');
+            const pendingBadge = isPending ? '<span class="pending-badge">Pending</span>' : '';
+
+            return `
+            <tr class="${rowClasses}">
+                <td class="select-column">
+                    <input type="checkbox" class="transaction-checkbox" data-transaction-id="${t.id}">
+                </td>
+                <td>${this.formatDate(t.date)}${pendingBadge}</td>
+                <td>${this.escapeHtml(t.description)}</td>
+                <td>${categoryDisplay}</td>
+                <td class="amount ${t.type}">${this.formatCurrency(t.amount, t.accountCurrency)}</td>
+                <td>${this.escapeHtml(t.accountName)}</td>
+                <td class="reconcile-column"></td>
+                <td>
+                    <button class="tertiary transaction-split-btn" data-transaction-id="${t.id}" title="${isSplit ? 'Edit splits' : 'Split transaction'}">
+                        ${isSplit ? 'Splits' : 'Split'}
+                    </button>
+                    <button class="tertiary transaction-edit-btn" data-transaction-id="${t.id}" aria-label="Edit transaction: ${t.description}">Edit</button>
+                    <button class="error transaction-delete-btn" data-transaction-id="${t.id}" aria-label="Delete transaction: ${t.description}">Delete</button>
+                </td>
+            </tr>
+            `;
+        }).join('');
+    }
+
     renderTransactionsList(transactions) {
         return transactions.map(t => `
             <div class="transaction-item">

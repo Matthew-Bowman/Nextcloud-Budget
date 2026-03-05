@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace OCA\Budget\Tests\Unit\Service\Import;
 
-use OCA\Budget\Db\Account;
 use OCA\Budget\Db\AccountMapper;
-use OCA\Budget\Db\Category;
 use OCA\Budget\Db\CategoryMapper;
 use OCA\Budget\Db\ImportRule;
 use OCA\Budget\Db\Transaction;
@@ -36,68 +34,53 @@ class RuleActionApplicatorTest extends TestCase {
 		);
 	}
 
-	private function createTransaction(array $data = []): Transaction {
-		$transaction = new Transaction();
+	private function createMockTransaction(array $data = []): Transaction {
+		$transaction = $this->createMock(Transaction::class);
 
+		// Default values
 		$defaults = [
-			'accountId' => 1,
-			'type' => 'expense',
 			'categoryId' => null,
 			'vendor' => null,
 			'notes' => null,
-			'reference' => null,
+			'accountId' => 1,
+			'type' => 'expense',
+			'reference' => null
 		];
 
 		$data = array_merge($defaults, $data);
 
-		$transaction->setAccountId($data['accountId']);
-		$transaction->setType($data['type']);
-		if ($data['categoryId'] !== null) {
-			$transaction->setCategoryId($data['categoryId']);
-		}
-		if ($data['vendor'] !== null) {
-			$transaction->setVendor($data['vendor']);
-		}
-		if ($data['notes'] !== null) {
-			$transaction->setNotes($data['notes']);
-		}
-		if ($data['reference'] !== null) {
-			$transaction->setReference($data['reference']);
-		}
+		// Setup getters
+		$transaction->method('getCategoryId')->willReturn($data['categoryId']);
+		$transaction->method('getVendor')->willReturn($data['vendor']);
+		$transaction->method('getNotes')->willReturn($data['notes']);
+		$transaction->method('getAccountId')->willReturn($data['accountId']);
+		$transaction->method('getType')->willReturn($data['type']);
+		$transaction->method('getReference')->willReturn($data['reference']);
 
 		return $transaction;
 	}
 
-	private function createRule(array $actions, bool $stopProcessing = true): ImportRule {
-		$rule = new ImportRule();
-		$rule->setActionsFromArray($actions);
-		$rule->setStopProcessing($stopProcessing);
+	private function createMockRule(array $actions, bool $stopProcessing = true): ImportRule {
+		$rule = $this->createMock(ImportRule::class);
+		$rule->method('getParsedActions')->willReturn($actions);
+		$rule->method('getStopProcessing')->willReturn($stopProcessing);
 		return $rule;
-	}
-
-	private function makeCategory(int $id): Category {
-		$category = new Category();
-		$category->setId($id);
-		return $category;
-	}
-
-	private function makeAccount(int $id): Account {
-		$account = new Account();
-		$account->setId($id);
-		return $account;
 	}
 
 	// ===== Single Action Tests =====
 
 	public function testSetCategoryAlways(): void {
-		$transaction = $this->createTransaction(['categoryId' => null]);
+		$transaction = $this->createMockTransaction(['categoryId' => null]);
+		$transaction->expects($this->once())
+			->method('setCategoryId')
+			->with(5);
 
 		$this->categoryMapper->expects($this->once())
 			->method('find')
 			->with(5, 'user123')
-			->willReturn($this->makeCategory(5));
+			->willReturn(new \stdClass()); // Mock category
 
-		$rule = $this->createRule([
+		$rule = $this->createMockRule([
 			'version' => 2,
 			'actions' => [
 				[
@@ -112,16 +95,18 @@ class RuleActionApplicatorTest extends TestCase {
 		$changes = $this->applicator->applyRules($transaction, [$rule], 'user123');
 
 		$this->assertArrayHasKey('category', $changes);
-		$this->assertEquals(5, $transaction->getCategoryId());
 	}
 
 	public function testSetCategoryIfEmpty(): void {
 		// Should set when empty
-		$transaction1 = $this->createTransaction(['categoryId' => null]);
+		$transaction1 = $this->createMockTransaction(['categoryId' => null]);
+		$transaction1->expects($this->once())
+			->method('setCategoryId')
+			->with(5);
 
-		$this->categoryMapper->method('find')->willReturn($this->makeCategory(5));
+		$this->categoryMapper->method('find')->willReturn(new \stdClass());
 
-		$rule = $this->createRule([
+		$rule = $this->createMockRule([
 			'version' => 2,
 			'actions' => [
 				[
@@ -134,19 +119,22 @@ class RuleActionApplicatorTest extends TestCase {
 		]);
 
 		$this->applicator->applyRules($transaction1, [$rule], 'user123');
-		$this->assertEquals(5, $transaction1->getCategoryId());
 
 		// Should NOT set when already has value
-		$transaction2 = $this->createTransaction(['categoryId' => 3]);
+		$transaction2 = $this->createMockTransaction(['categoryId' => 3]);
+		$transaction2->expects($this->never())
+			->method('setCategoryId');
 
 		$this->applicator->applyRules($transaction2, [$rule], 'user123');
-		$this->assertEquals(3, $transaction2->getCategoryId());
 	}
 
 	public function testSetVendor(): void {
-		$transaction = $this->createTransaction(['vendor' => null]);
+		$transaction = $this->createMockTransaction(['vendor' => null]);
+		$transaction->expects($this->once())
+			->method('setVendor')
+			->with('Amazon');
 
-		$rule = $this->createRule([
+		$rule = $this->createMockRule([
 			'version' => 2,
 			'actions' => [
 				[
@@ -161,13 +149,15 @@ class RuleActionApplicatorTest extends TestCase {
 		$changes = $this->applicator->applyRules($transaction, [$rule], 'user123');
 
 		$this->assertArrayHasKey('vendor', $changes);
-		$this->assertEquals('Amazon', $transaction->getVendor());
 	}
 
 	public function testSetNotesReplace(): void {
-		$transaction = $this->createTransaction(['notes' => 'Old notes']);
+		$transaction = $this->createMockTransaction(['notes' => 'Old notes']);
+		$transaction->expects($this->once())
+			->method('setNotes')
+			->with('New notes');
 
-		$rule = $this->createRule([
+		$rule = $this->createMockRule([
 			'version' => 2,
 			'actions' => [
 				[
@@ -183,13 +173,15 @@ class RuleActionApplicatorTest extends TestCase {
 
 		$this->assertArrayHasKey('notes', $changes);
 		$this->assertEquals('New notes', $changes['notes']['new']);
-		$this->assertEquals('New notes', $transaction->getNotes());
 	}
 
 	public function testSetNotesAppend(): void {
-		$transaction = $this->createTransaction(['notes' => 'Existing notes']);
+		$transaction = $this->createMockTransaction(['notes' => 'Existing notes']);
+		$transaction->expects($this->once())
+			->method('setNotes')
+			->with('Existing notes | Added note');
 
-		$rule = $this->createRule([
+		$rule = $this->createMockRule([
 			'version' => 2,
 			'actions' => [
 				[
@@ -203,14 +195,15 @@ class RuleActionApplicatorTest extends TestCase {
 		]);
 
 		$this->applicator->applyRules($transaction, [$rule], 'user123');
-
-		$this->assertEquals('Existing notes | Added note', $transaction->getNotes());
 	}
 
 	public function testSetNotesAppendToEmpty(): void {
-		$transaction = $this->createTransaction(['notes' => null]);
+		$transaction = $this->createMockTransaction(['notes' => null]);
+		$transaction->expects($this->once())
+			->method('setNotes')
+			->with('New note');
 
-		$rule = $this->createRule([
+		$rule = $this->createMockRule([
 			'version' => 2,
 			'actions' => [
 				[
@@ -224,19 +217,20 @@ class RuleActionApplicatorTest extends TestCase {
 		]);
 
 		$this->applicator->applyRules($transaction, [$rule], 'user123');
-
-		$this->assertEquals('New note', $transaction->getNotes());
 	}
 
 	public function testSetAccount(): void {
-		$transaction = $this->createTransaction(['accountId' => 1]);
+		$transaction = $this->createMockTransaction(['accountId' => 1]);
+		$transaction->expects($this->once())
+			->method('setAccountId')
+			->with(5);
 
 		$this->accountMapper->expects($this->once())
 			->method('find')
 			->with(5, 'user123')
-			->willReturn($this->makeAccount(5));
+			->willReturn(new \stdClass());
 
-		$rule = $this->createRule([
+		$rule = $this->createMockRule([
 			'version' => 2,
 			'actions' => [
 				[
@@ -251,13 +245,15 @@ class RuleActionApplicatorTest extends TestCase {
 		$changes = $this->applicator->applyRules($transaction, [$rule], 'user123');
 
 		$this->assertArrayHasKey('account', $changes);
-		$this->assertEquals(5, $transaction->getAccountId());
 	}
 
 	public function testSetTransactionType(): void {
-		$transaction = $this->createTransaction(['type' => 'expense']);
+		$transaction = $this->createMockTransaction(['type' => 'expense']);
+		$transaction->expects($this->once())
+			->method('setType')
+			->with('income');
 
-		$rule = $this->createRule([
+		$rule = $this->createMockRule([
 			'version' => 2,
 			'actions' => [
 				[
@@ -272,13 +268,15 @@ class RuleActionApplicatorTest extends TestCase {
 		$changes = $this->applicator->applyRules($transaction, [$rule], 'user123');
 
 		$this->assertArrayHasKey('type', $changes);
-		$this->assertEquals('income', $transaction->getType());
 	}
 
 	public function testSetReference(): void {
-		$transaction = $this->createTransaction(['reference' => null]);
+		$transaction = $this->createMockTransaction(['reference' => null]);
+		$transaction->expects($this->once())
+			->method('setReference')
+			->with('AUTO-12345');
 
-		$rule = $this->createRule([
+		$rule = $this->createMockRule([
 			'version' => 2,
 			'actions' => [
 				[
@@ -293,21 +291,24 @@ class RuleActionApplicatorTest extends TestCase {
 		$changes = $this->applicator->applyRules($transaction, [$rule], 'user123');
 
 		$this->assertArrayHasKey('reference', $changes);
-		$this->assertEquals('AUTO-12345', $transaction->getReference());
 	}
 
 	// ===== Multiple Actions Tests =====
 
 	public function testMultipleActionsInSingleRule(): void {
-		$transaction = $this->createTransaction([
+		$transaction = $this->createMockTransaction([
 			'categoryId' => null,
 			'vendor' => null,
 			'notes' => null
 		]);
 
-		$this->categoryMapper->method('find')->willReturn($this->makeCategory(5));
+		$transaction->expects($this->once())->method('setCategoryId')->with(5);
+		$transaction->expects($this->once())->method('setVendor')->with('Amazon');
+		$transaction->expects($this->once())->method('setNotes')->with('Shopping');
 
-		$rule = $this->createRule([
+		$this->categoryMapper->method('find')->willReturn(new \stdClass());
+
+		$rule = $this->createMockRule([
 			'version' => 2,
 			'actions' => [
 				[
@@ -336,19 +337,21 @@ class RuleActionApplicatorTest extends TestCase {
 		$this->assertArrayHasKey('category', $changes);
 		$this->assertArrayHasKey('vendor', $changes);
 		$this->assertArrayHasKey('notes', $changes);
-		$this->assertEquals(5, $transaction->getCategoryId());
-		$this->assertEquals('Amazon', $transaction->getVendor());
-		$this->assertEquals('Shopping', $transaction->getNotes());
 	}
 
 	// ===== Conflict Resolution Tests =====
 
 	public function testMultipleRulesHigherPriorityWins(): void {
-		$transaction = $this->createTransaction(['categoryId' => null]);
+		$transaction = $this->createMockTransaction(['categoryId' => null]);
 
-		$this->categoryMapper->method('find')->willReturn($this->makeCategory(5));
+		// First rule (higher priority) should win
+		$transaction->expects($this->once())
+			->method('setCategoryId')
+			->with(5);
 
-		$rule1 = $this->createRule([
+		$this->categoryMapper->method('find')->willReturn(new \stdClass());
+
+		$rule1 = $this->createMockRule([
 			'version' => 2,
 			'actions' => [
 				[
@@ -360,7 +363,7 @@ class RuleActionApplicatorTest extends TestCase {
 			]
 		], false); // Don't stop processing
 
-		$rule2 = $this->createRule([
+		$rule2 = $this->createMockRule([
 			'version' => 2,
 			'actions' => [
 				[
@@ -375,18 +378,24 @@ class RuleActionApplicatorTest extends TestCase {
 		$changes = $this->applicator->applyRules($transaction, [$rule1, $rule2], 'user123');
 
 		$this->assertEquals(5, $changes['category']['new']);
-		$this->assertEquals(5, $transaction->getCategoryId());
 	}
 
 	public function testStopProcessing(): void {
-		$transaction = $this->createTransaction([
+		$transaction = $this->createMockTransaction([
 			'categoryId' => null,
 			'vendor' => null
 		]);
 
-		$this->categoryMapper->method('find')->willReturn($this->makeCategory(5));
+		// Only first rule should be applied
+		$transaction->expects($this->once())
+			->method('setCategoryId')
+			->with(5);
+		$transaction->expects($this->never())
+			->method('setVendor');
 
-		$rule1 = $this->createRule([
+		$this->categoryMapper->method('find')->willReturn(new \stdClass());
+
+		$rule1 = $this->createMockRule([
 			'version' => 2,
 			'actions' => [
 				[
@@ -398,7 +407,7 @@ class RuleActionApplicatorTest extends TestCase {
 			]
 		], true); // Stop processing
 
-		$rule2 = $this->createRule([
+		$rule2 = $this->createMockRule([
 			'version' => 2,
 			'actions' => [
 				[
@@ -414,19 +423,25 @@ class RuleActionApplicatorTest extends TestCase {
 
 		$this->assertArrayHasKey('category', $changes);
 		$this->assertArrayNotHasKey('vendor', $changes);
-		$this->assertEquals(5, $transaction->getCategoryId());
-		$this->assertNull($transaction->getVendor());
 	}
 
 	public function testContinueProcessingWhenStopProcessingFalse(): void {
-		$transaction = $this->createTransaction([
+		$transaction = $this->createMockTransaction([
 			'categoryId' => null,
 			'vendor' => null
 		]);
 
-		$this->categoryMapper->method('find')->willReturn($this->makeCategory(5));
+		// Both rules should be applied
+		$transaction->expects($this->once())
+			->method('setCategoryId')
+			->with(5);
+		$transaction->expects($this->once())
+			->method('setVendor')
+			->with('Test Vendor');
 
-		$rule1 = $this->createRule([
+		$this->categoryMapper->method('find')->willReturn(new \stdClass());
+
+		$rule1 = $this->createMockRule([
 			'version' => 2,
 			'actions' => [
 				[
@@ -438,7 +453,7 @@ class RuleActionApplicatorTest extends TestCase {
 			]
 		], false); // Continue processing
 
-		$rule2 = $this->createRule([
+		$rule2 = $this->createMockRule([
 			'version' => 2,
 			'actions' => [
 				[
@@ -454,21 +469,26 @@ class RuleActionApplicatorTest extends TestCase {
 
 		$this->assertArrayHasKey('category', $changes);
 		$this->assertArrayHasKey('vendor', $changes);
-		$this->assertEquals(5, $transaction->getCategoryId());
-		$this->assertEquals('Test Vendor', $transaction->getVendor());
 	}
 
 	// ===== Legacy Format Tests =====
 
 	public function testLegacyV1ActionsFormat(): void {
-		$transaction = $this->createTransaction([
+		$transaction = $this->createMockTransaction([
 			'categoryId' => null,
 			'vendor' => null
 		]);
 
-		$this->categoryMapper->method('find')->willReturn($this->makeCategory(5));
+		$transaction->expects($this->once())
+			->method('setCategoryId')
+			->with(5);
+		$transaction->expects($this->once())
+			->method('setVendor')
+			->with('Amazon');
 
-		$rule = $this->createRule([
+		$this->categoryMapper->method('find')->willReturn(new \stdClass());
+
+		$rule = $this->createMockRule([
 			'categoryId' => 5,
 			'vendor' => 'Amazon'
 		]);
@@ -477,14 +497,14 @@ class RuleActionApplicatorTest extends TestCase {
 
 		$this->assertArrayHasKey('category', $changes);
 		$this->assertArrayHasKey('vendor', $changes);
-		$this->assertEquals(5, $transaction->getCategoryId());
-		$this->assertEquals('Amazon', $transaction->getVendor());
 	}
 
 	// ===== Error Handling Tests =====
 
 	public function testInvalidCategoryReference(): void {
-		$transaction = $this->createTransaction(['categoryId' => null]);
+		$transaction = $this->createMockTransaction(['categoryId' => null]);
+		$transaction->expects($this->never())
+			->method('setCategoryId');
 
 		$this->categoryMapper->expects($this->once())
 			->method('find')
@@ -498,7 +518,7 @@ class RuleActionApplicatorTest extends TestCase {
 				$this->anything()
 			);
 
-		$rule = $this->createRule([
+		$rule = $this->createMockRule([
 			'version' => 2,
 			'actions' => [
 				[
@@ -513,11 +533,12 @@ class RuleActionApplicatorTest extends TestCase {
 		$changes = $this->applicator->applyRules($transaction, [$rule], 'user123');
 
 		$this->assertArrayNotHasKey('category', $changes);
-		$this->assertNull($transaction->getCategoryId());
 	}
 
 	public function testInvalidAccountReference(): void {
-		$transaction = $this->createTransaction(['accountId' => 1]);
+		$transaction = $this->createMockTransaction(['accountId' => 1]);
+		$transaction->expects($this->never())
+			->method('setAccountId');
 
 		$this->accountMapper->expects($this->once())
 			->method('find')
@@ -531,7 +552,7 @@ class RuleActionApplicatorTest extends TestCase {
 				$this->anything()
 			);
 
-		$rule = $this->createRule([
+		$rule = $this->createMockRule([
 			'version' => 2,
 			'actions' => [
 				[
@@ -546,11 +567,12 @@ class RuleActionApplicatorTest extends TestCase {
 		$changes = $this->applicator->applyRules($transaction, [$rule], 'user123');
 
 		$this->assertArrayNotHasKey('account', $changes);
-		$this->assertEquals(1, $transaction->getAccountId());
 	}
 
 	public function testInvalidTransactionType(): void {
-		$transaction = $this->createTransaction(['type' => 'expense']);
+		$transaction = $this->createMockTransaction(['type' => 'expense']);
+		$transaction->expects($this->never())
+			->method('setType');
 
 		$this->logger->expects($this->once())
 			->method('warning')
@@ -559,7 +581,7 @@ class RuleActionApplicatorTest extends TestCase {
 				$this->anything()
 			);
 
-		$rule = $this->createRule([
+		$rule = $this->createMockRule([
 			'version' => 2,
 			'actions' => [
 				[
@@ -574,14 +596,13 @@ class RuleActionApplicatorTest extends TestCase {
 		$changes = $this->applicator->applyRules($transaction, [$rule], 'user123');
 
 		$this->assertArrayNotHasKey('type', $changes);
-		$this->assertEquals('expense', $transaction->getType());
 	}
 
 	// ===== Validation Tests =====
 
 	public function testValidateActionsSuccess(): void {
-		$this->categoryMapper->method('find')->willReturn($this->makeCategory(5));
-		$this->accountMapper->method('find')->willReturn($this->makeAccount(1));
+		$this->categoryMapper->method('find')->willReturn(new \stdClass());
+		$this->accountMapper->method('find')->willReturn(new \stdClass());
 
 		$actions = [
 			'version' => 2,

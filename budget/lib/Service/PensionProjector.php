@@ -11,16 +11,13 @@ use OCP\AppFramework\Db\DoesNotExistException;
 class PensionProjector {
     private PensionAccountMapper $pensionMapper;
     private PensionService $pensionService;
-    private CurrencyConversionService $conversionService;
 
     public function __construct(
         PensionAccountMapper $pensionMapper,
-        PensionService $pensionService,
-        CurrencyConversionService $conversionService
+        PensionService $pensionService
     ) {
         $this->pensionMapper = $pensionMapper;
         $this->pensionService = $pensionService;
-        $this->conversionService = $conversionService;
     }
 
     /**
@@ -45,7 +42,6 @@ class PensionProjector {
      */
     public function getCombinedProjection(string $userId, ?int $currentAge = null): array {
         $pensions = $this->pensionMapper->findAll($userId);
-        $baseCurrency = $this->conversionService->getBaseCurrency($userId);
 
         $totalCurrentValue = 0.0;
         $totalProjectedValue = 0.0;
@@ -56,23 +52,16 @@ class PensionProjector {
             $projection = $this->getProjection($pension->getId(), $userId, $currentAge);
             $projections[] = $projection;
 
-            $pensionCurrency = $pension->getCurrency() ?: $baseCurrency;
-
             if ($pension->isDefinedContribution()) {
-                $balance = $pension->getCurrentBalance() ?? 0;
-                $projectedValue = $projection['projectedValue'] ?? 0;
-                $totalCurrentValue += $this->convertAmount($balance, $pensionCurrency, $baseCurrency, $userId);
-                $totalProjectedValue += $this->convertAmount($projectedValue, $pensionCurrency, $baseCurrency, $userId);
+                $totalCurrentValue += $pension->getCurrentBalance() ?? 0;
+                $totalProjectedValue += $projection['projectedValue'] ?? 0;
                 // Estimate annual income from DC pot (4% withdrawal rate)
-                $totalProjectedAnnualIncome += $this->convertAmount($projectedValue, $pensionCurrency, $baseCurrency, $userId) * 0.04;
+                $totalProjectedAnnualIncome += ($projection['projectedValue'] ?? 0) * 0.04;
             } elseif ($pension->isDefinedBenefit()) {
-                $transferValue = $pension->getTransferValue() ?? 0;
-                $income = $pension->getAnnualIncome() ?? 0;
-                $totalCurrentValue += $this->convertAmount($transferValue, $pensionCurrency, $baseCurrency, $userId);
-                $totalProjectedAnnualIncome += $this->convertAmount($income, $pensionCurrency, $baseCurrency, $userId);
+                $totalCurrentValue += $pension->getTransferValue() ?? 0;
+                $totalProjectedAnnualIncome += $pension->getAnnualIncome() ?? 0;
             } else {
-                $income = $pension->getAnnualIncome() ?? 0;
-                $totalProjectedAnnualIncome += $this->convertAmount($income, $pensionCurrency, $baseCurrency, $userId);
+                $totalProjectedAnnualIncome += $pension->getAnnualIncome() ?? 0;
             }
         }
 
@@ -83,18 +72,7 @@ class PensionProjector {
             'totalProjectedMonthlyIncome' => round($totalProjectedAnnualIncome / 12, 2),
             'pensionCount' => count($pensions),
             'projections' => $projections,
-            'baseCurrency' => $baseCurrency,
         ];
-    }
-
-    /**
-     * Convert an amount to the base currency if different.
-     */
-    private function convertAmount(float $amount, string $fromCurrency, string $baseCurrency, string $userId): float {
-        if ($amount == 0 || strtoupper($fromCurrency) === strtoupper($baseCurrency)) {
-            return $amount;
-        }
-        return $this->conversionService->convertToBaseFloat($amount, $fromCurrency, $userId);
     }
 
     /**

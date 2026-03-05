@@ -15,7 +15,6 @@ enum Frequency: string {
     case QUARTERLY = 'quarterly';
     case SEMI_ANNUALLY = 'semi-annually';
     case YEARLY = 'yearly';
-    case ONE_TIME = 'one-time';
     case CUSTOM = 'custom';
 
     /**
@@ -31,7 +30,6 @@ enum Frequency: string {
             self::QUARTERLY => 4,
             self::SEMI_ANNUALLY => 2,
             self::YEARLY => 1,
-            self::ONE_TIME => 1,
             self::CUSTOM => 0, // Must be calculated from custom pattern
         };
     }
@@ -50,7 +48,6 @@ enum Frequency: string {
             self::QUARTERLY => 1 / 3,
             self::SEMI_ANNUALLY => 1 / 6,
             self::YEARLY => 1 / 12,
-            self::ONE_TIME => 1 / 12,
             self::CUSTOM => 0, // Must be calculated from custom pattern
         };
     }
@@ -74,7 +71,6 @@ enum Frequency: string {
             self::QUARTERLY => 'Quarterly',
             self::SEMI_ANNUALLY => 'Semi-Annually',
             self::YEARLY => 'Yearly',
-            self::ONE_TIME => 'One-Time',
             self::CUSTOM => 'Custom',
         };
     }

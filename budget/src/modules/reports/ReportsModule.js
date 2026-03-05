@@ -801,7 +801,6 @@ export default class ReportsModule {
         const comparisonType = document.getElementById('yoy-comparison-type')?.value || 'years';
         const years = document.getElementById('yoy-years')?.value || 3;
         const month = document.getElementById('yoy-month')?.value || new Date().getMonth() + 1;
-        const accountId = document.getElementById('report-account')?.value || '';
 
         // Show loading
         const loadingEl = document.getElementById('report-loading');
@@ -813,17 +812,16 @@ export default class ReportsModule {
         document.getElementById('yoy-category-table-container')?.style.setProperty('display', 'none');
 
         try {
-            const accountParam = accountId ? `&accountId=${accountId}` : '';
             let endpoint;
             switch (comparisonType) {
                 case 'month':
-                    endpoint = `/apps/budget/api/yoy/month?month=${month}&years=${years}${accountParam}`;
+                    endpoint = `/apps/budget/api/yoy/month?month=${month}&years=${years}`;
                     break;
                 case 'categories':
-                    endpoint = `/apps/budget/api/yoy/categories?years=${years}${accountParam}`;
+                    endpoint = `/apps/budget/api/yoy/categories?years=${years}`;
                     break;
                 default:
-                    endpoint = `/apps/budget/api/yoy/years?years=${years}${accountParam}`;
+                    endpoint = `/apps/budget/api/yoy/years?years=${years}`;
             }
 
             const response = await fetch(OC.generateUrl(endpoint), {

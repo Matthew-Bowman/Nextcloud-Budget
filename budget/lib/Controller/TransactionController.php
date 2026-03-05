@@ -57,13 +57,12 @@ class TransactionController extends Controller {
         ?string $search = null,
         ?string $dateFrom = null,
         ?string $dateTo = null,
-        ?string $category = null,
+        ?int $category = null,
         ?string $type = null,
         ?float $amountMin = null,
         ?float $amountMax = null,
         ?string $sort = 'date',
-        ?string $direction = 'desc',
-        ?string $status = null
+        ?string $direction = 'desc'
     ): DataResponse {
         try {
             $offset = ($page - 1) * $limit;
@@ -78,8 +77,7 @@ class TransactionController extends Controller {
                 'amountMin' => $amountMin,
                 'amountMax' => $amountMax,
                 'sort' => $sort,
-                'direction' => $direction,
-                'status' => $status,
+                'direction' => $direction
             ];
 
             $result = $this->service->findWithFilters($this->userId, $filters, $limit, $offset);
@@ -199,8 +197,7 @@ class TransactionController extends Controller {
         ?string $vendor = null,
         ?string $reference = null,
         ?string $notes = null,
-        ?bool $reconciled = null,
-        ?string $status = null
+        ?bool $reconciled = null
     ): DataResponse {
         try {
             $updates = [];
@@ -266,12 +263,6 @@ class TransactionController extends Controller {
             }
             if ($reconciled !== null) {
                 $updates['reconciled'] = $reconciled;
-            }
-            if ($status !== null) {
-                if (!in_array($status, ['cleared', 'scheduled'], true)) {
-                    return new DataResponse(['error' => 'Invalid status. Must be cleared or scheduled'], Http::STATUS_BAD_REQUEST);
-                }
-                $updates['status'] = $status;
             }
 
             if (empty($updates)) {

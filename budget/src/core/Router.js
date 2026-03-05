@@ -82,12 +82,6 @@ export default class Router {
                 case 'pensions':
                     this.app.loadPensionsView();
                     break;
-                case 'assets':
-                    this.app.loadAssetsView();
-                    break;
-                case 'exchange-rates':
-                    this.app.loadExchangeRatesView();
-                    break;
                 case 'settings':
                     this.app.loadSettingsView();
                     break;
@@ -142,12 +136,6 @@ export default class Router {
                 break;
             case 'pensions':
                 this.app.loadPensionsView();
-                break;
-            case 'assets':
-                this.app.loadAssetsView();
-                break;
-            case 'exchange-rates':
-                this.app.loadExchangeRatesView();
                 break;
             case 'settings':
                 // Don't reload settings view (we're already in it)

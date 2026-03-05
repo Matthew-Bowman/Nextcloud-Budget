@@ -9,7 +9,6 @@ use OCA\Budget\Db\NetWorthSnapshot;
 use OCA\Budget\Db\NetWorthSnapshotMapper;
 use OCA\Budget\Db\TransactionMapper;
 use OCA\Budget\Enum\AccountType;
-use OCA\Budget\Service\AssetService;
 
 class NetWorthService {
     /**
@@ -21,29 +20,22 @@ class NetWorthService {
     private NetWorthSnapshotMapper $snapshotMapper;
     private AccountMapper $accountMapper;
     private TransactionMapper $transactionMapper;
-    private CurrencyConversionService $conversionService;
-    private AssetService $assetService;
 
     public function __construct(
         NetWorthSnapshotMapper $snapshotMapper,
         AccountMapper $accountMapper,
-        TransactionMapper $transactionMapper,
-        CurrencyConversionService $conversionService,
-        AssetService $assetService
+        TransactionMapper $transactionMapper
     ) {
         $this->snapshotMapper = $snapshotMapper;
         $this->accountMapper = $accountMapper;
         $this->transactionMapper = $transactionMapper;
-        $this->conversionService = $conversionService;
-        $this->assetService = $assetService;
     }
 
     /**
      * Calculate current net worth from account balances.
      * Excludes future-dated transactions to show balance as of today.
-     * Multi-currency accounts are converted to the user's base currency.
      *
-     * @return array{totalAssets: float, totalLiabilities: float, netWorth: float, baseCurrency: string, unconvertedCurrencies: string[]}
+     * @return array{totalAssets: float, totalLiabilities: float, netWorth: float}
      */
     public function calculateNetWorth(string $userId): array {
         $accounts = $this->accountMapper->findAll($userId);
@@ -51,10 +43,6 @@ class NetWorthService {
         // Get future transaction adjustments for all accounts in one query
         $today = date('Y-m-d');
         $futureChanges = $this->transactionMapper->getNetChangeAfterDateBatch($userId, $today);
-
-        $baseCurrency = $this->conversionService->getBaseCurrency($userId);
-        $needsConversion = $this->conversionService->needsConversion($accounts);
-        $unconvertedCurrencies = [];
 
         $totalAssets = '0.00';
         $totalLiabilities = '0.00';
@@ -65,21 +53,6 @@ class NetWorthService {
             $futureChange = $futureChanges[$account->getId()] ?? 0;
             $balance = (string) ($storedBalance - $futureChange);
             $type = $account->getType();
-
-            // Convert to base currency if needed
-            if ($needsConversion) {
-                $accountCurrency = $account->getCurrency() ?: 'USD';
-                if ($accountCurrency !== $baseCurrency) {
-                    $convertedBalance = $this->conversionService->convertToBase($balance, $accountCurrency, $userId);
-
-                    // Detect if conversion failed (amount unchanged for non-zero value)
-                    if ((float)$balance != 0 && $convertedBalance === $balance) {
-                        $unconvertedCurrencies[] = $accountCurrency;
-                    }
-
-                    $balance = $convertedBalance;
-                }
-            }
 
             if ($this->isLiabilityType($type)) {
                 // Liabilities: use absolute value
@@ -93,23 +66,12 @@ class NetWorthService {
             }
         }
 
-        // Include non-cash assets in total assets
-        try {
-            $assetSummary = $this->assetService->getSummary($userId);
-            $assetWorth = (string)($assetSummary['totalAssetWorth'] ?? 0);
-            $totalAssets = MoneyCalculator::add($totalAssets, $assetWorth);
-        } catch (\Exception $e) {
-            // Graceful fallback if assets table doesn't exist yet
-        }
-
         $netWorth = MoneyCalculator::subtract($totalAssets, $totalLiabilities);
 
         return [
             'totalAssets' => MoneyCalculator::toFloat($totalAssets),
             'totalLiabilities' => MoneyCalculator::toFloat($totalLiabilities),
             'netWorth' => MoneyCalculator::toFloat($netWorth),
-            'baseCurrency' => $baseCurrency,
-            'unconvertedCurrencies' => array_values(array_unique($unconvertedCurrencies)),
         ];
     }
 

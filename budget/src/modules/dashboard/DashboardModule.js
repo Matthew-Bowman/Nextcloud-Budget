@@ -68,7 +68,7 @@ export default class DashboardModule {
             const cacheBuster = Date.now();
 
             // Load all dashboard data in parallel for better performance
-            const [summaryResponse, trendResponse, transResponse, billsResponse, budgetResponse, goalsResponse, pensionResponse, assetResponse, netWorthResponse, alertsResponse, debtResponse] = await Promise.all([
+            const [summaryResponse, trendResponse, transResponse, billsResponse, budgetResponse, goalsResponse, pensionResponse, netWorthResponse, alertsResponse, debtResponse] = await Promise.all([
                 // Current month summary for hero stats
                 fetch(OC.generateUrl(`/apps/budget/api/reports/summary?startDate=${startOfMonth}&endDate=${endOfMonth}&_=${cacheBuster}`), {
                     headers: { 'requesttoken': OC.requestToken }
@@ -92,9 +92,6 @@ export default class DashboardModule {
                 fetch(OC.generateUrl('/apps/budget/api/pensions/summary'), {
                     headers: { 'requesttoken': OC.requestToken }
                 }).catch(() => ({ ok: false })),
-                fetch(OC.generateUrl('/apps/budget/api/assets/summary'), {
-                    headers: { 'requesttoken': OC.requestToken }
-                }).catch(() => ({ ok: false })),
                 fetch(OC.generateUrl('/apps/budget/api/net-worth/snapshots?days=30'), {
                     headers: { 'requesttoken': OC.requestToken }
                 }).catch(() => ({ ok: false })),
@@ -114,7 +111,6 @@ export default class DashboardModule {
             const budgetData = budgetDataRaw && typeof budgetDataRaw === 'object' ? budgetDataRaw : { categories: [] };
             const savingsGoals = goalsResponse.ok ? await goalsResponse.json() : [];
             const pensionSummary = pensionResponse.ok ? await pensionResponse.json() : { totalPensionWorth: 0, pensionCount: 0 };
-            const assetSummary = assetResponse.ok ? await assetResponse.json() : { totalAssetWorth: 0, assetCount: 0 };
             const netWorthSnapshots = netWorthResponse.ok ? await netWorthResponse.json() : [];
             const budgetAlerts = alertsResponse.ok ? await alertsResponse.json() : [];
             const debtSummary = debtResponse.ok ? await debtResponse.json() : null;
@@ -142,9 +138,6 @@ export default class DashboardModule {
 
             // Update Pension Dashboard Card
             this.updatePensionsSummary(pensionSummary);
-
-            // Update Assets Dashboard Card
-            this.updateAssetsSummary(assetSummary);
 
             // Update Debt Payoff Dashboard Card
             this.updateDebtPayoffWidget(debtSummary);
@@ -212,10 +205,7 @@ export default class DashboardModule {
 
     updateDashboardHero(summary) {
         const totals = summary.totals || {};
-        const currency = summary.baseCurrency || this.getPrimaryCurrency();
-
-        // Show conversion indicator if multi-currency conversion was applied
-        this.updateConversionIndicator(summary);
+        const currency = this.getPrimaryCurrency();
 
         // Net Worth (total balance across all accounts)
         const netWorthEl = document.getElementById('hero-net-worth-value');
@@ -312,7 +302,7 @@ export default class DashboardModule {
         const expenses = summary.totals.totalExpenses || 0;
         const cashFlow = income - expenses;
 
-        el.textContent = this.formatCurrency(cashFlow, summary.baseCurrency || this.getPrimaryCurrency());
+        el.textContent = this.formatCurrency(cashFlow, this.getPrimaryCurrency());
         el.className = `hero-value ${cashFlow >= 0 ? 'income' : 'expenses'}`;
 
         const changeEl = document.getElementById('hero-cash-flow-change');
@@ -454,36 +444,6 @@ export default class DashboardModule {
         if (changeEl) {
             changeEl.textContent = `${onTrack}/${totalBudgets} on track`;
         }
-    }
-
-    // ===========================
-    // Currency Conversion Indicator
-    // ===========================
-
-    updateConversionIndicator(summary) {
-        // Remove any existing indicator
-        const existing = document.getElementById('currency-conversion-indicator');
-        if (existing) existing.remove();
-
-        if (!summary.currencyConverted) return;
-
-        // Place indicator inside the net worth hero tile
-        const netWorthContent = document.querySelector('.hero-net-worth .hero-content');
-        if (!netWorthContent) return;
-
-        const indicator = document.createElement('span');
-        indicator.id = 'currency-conversion-indicator';
-        indicator.className = 'hero-subtext conversion-info';
-
-        const unconverted = summary.unconvertedCurrencies || [];
-        if (unconverted.length > 0) {
-            indicator.className = 'hero-subtext conversion-warning';
-            indicator.innerHTML = `&#9888; Rates unavailable for ${unconverted.join(', ')}`;
-        } else {
-            indicator.textContent = `Converted to ${summary.baseCurrency} at current rates`;
-        }
-
-        netWorthContent.appendChild(indicator);
     }
 
     // ===========================
@@ -668,11 +628,12 @@ export default class DashboardModule {
             return;
         }
 
-        const todayStr = formatters.getTodayDateString();
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
         container.innerHTML = bills.slice(0, 5).map(bill => {
-            const dueDateStr = bill.nextDueDate || bill.next_due_date;
-            const daysUntilDue = formatters.daysBetweenDates(todayStr, dueDateStr);
+            const dueDate = new Date(bill.nextDueDate || bill.next_due_date);
+            const daysUntilDue = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
 
             let statusClass = '';
             let dueText = '';
@@ -687,7 +648,7 @@ export default class DashboardModule {
                 statusClass = 'due-soon';
                 dueText = `Due in ${daysUntilDue} day${daysUntilDue !== 1 ? 's' : ''}`;
             } else {
-                dueText = `Due ${formatters.parseLocalDate(dueDateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+                dueText = `Due ${dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
             }
 
             return `
@@ -785,7 +746,7 @@ export default class DashboardModule {
     }
 
     updatePensionsSummary(summary) {
-        const currency = summary.baseCurrency || this.getPrimaryCurrency();
+        const currency = this.getPrimaryCurrency();
         const pensionWorth = summary.totalPensionWorth || 0;
         const projectedIncome = summary.totalProjectedIncome || 0;
         const count = summary.pensionCount || 0;
@@ -825,33 +786,6 @@ export default class DashboardModule {
                 subtext += ` · ${this.formatCurrency(projectedIncome, currency)}/yr income`;
             }
             heroPensionCount.textContent = subtext;
-        }
-    }
-
-    updateAssetsSummary(summary) {
-        const currency = summary.baseCurrency || this.getPrimaryCurrency();
-        const assetWorth = summary.totalAssetWorth || 0;
-        const count = summary.assetCount || 0;
-
-        const worthEl = document.getElementById('assets-total-worth');
-        const countEl = document.getElementById('assets-count');
-
-        if (worthEl) {
-            worthEl.textContent = this.formatCurrency(assetWorth, currency);
-        }
-        if (countEl) {
-            countEl.textContent = count;
-        }
-
-        // Update dashboard hero card
-        const heroAssetsValue = document.getElementById('hero-assets-value');
-        const heroAssetsCount = document.getElementById('hero-assets-count');
-
-        if (heroAssetsValue) {
-            heroAssetsValue.textContent = this.formatCurrency(assetWorth, currency);
-        }
-        if (heroAssetsCount) {
-            heroAssetsCount.textContent = count === 1 ? '1 asset' : `${count} assets`;
         }
     }
 

@@ -42,8 +42,6 @@ use OCP\AppFramework\Db\Entity;
  * @method void setIsSplit(bool $isSplit)
  * @method int|null getBillId()
  * @method void setBillId(?int $billId)
- * @method string|null getStatus()
- * @method void setStatus(?string $status)
  */
 class Transaction extends Entity implements JsonSerializable {
     protected $accountId;
@@ -62,7 +60,6 @@ class Transaction extends Entity implements JsonSerializable {
     protected $linkedTransactionId;
     protected $isSplit;
     protected $billId;
-    protected $status;
 
     public function __construct() {
         $this->addType('id', 'integer');
@@ -98,7 +95,6 @@ class Transaction extends Entity implements JsonSerializable {
             'linkedTransactionId' => $this->getLinkedTransactionId(),
             'isSplit' => $this->getIsSplit() ?? false,
             'billId' => $this->getBillId(),
-            'status' => $this->getStatus() ?? 'cleared',
         ];
     }
 }

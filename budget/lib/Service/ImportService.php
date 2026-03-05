@@ -423,16 +423,6 @@ class ImportService {
         $duplicates = 0;
         $errors = [];
 
-        // Detect date format from all rows before processing individually
-        $dateColumn = $mapping['date'] ?? null;
-        if ($dateColumn !== null) {
-            $dateStrings = array_filter(array_map(
-                fn($row) => $row[$dateColumn] ?? '',
-                $data
-            ));
-            $this->normalizer->detectDateFormat($dateStrings);
-        }
-
         foreach ($data as $index => $row) {
             try {
                 $transaction = $this->normalizer->mapRowToTransaction($row, $mapping);
@@ -457,8 +447,6 @@ class ImportService {
                 $errors[] = ['row' => $index, 'error' => $e->getMessage(), 'data' => $row];
             }
         }
-
-        $this->normalizer->resetDateFormat();
 
         return [
             'transactions' => array_slice($transactions, 0, 50),
@@ -522,7 +510,7 @@ class ImportService {
                         $transaction['categoryId'] ?? null,
                         $transaction['vendor'] ?? null,
                         $transaction['reference'] ?? null,
-                        $transaction['notes'] ?? null,
+                        null,
                         $importId
                     );
 
@@ -556,16 +544,6 @@ class ImportService {
         $skipped = 0;
         $errors = [];
 
-        // Detect date format from all rows before processing individually
-        $dateColumn = $mapping['date'] ?? null;
-        if ($dateColumn !== null) {
-            $dateStrings = array_filter(array_map(
-                fn($row) => $row[$dateColumn] ?? '',
-                $data
-            ));
-            $this->normalizer->detectDateFormat($dateStrings);
-        }
-
         foreach ($data as $index => $row) {
             try {
                 $transaction = $this->normalizer->mapRowToTransaction($row, $mapping);
@@ -590,7 +568,7 @@ class ImportService {
                     $transaction['categoryId'] ?? null,
                     $transaction['vendor'] ?? null,
                     $transaction['reference'] ?? null,
-                    $transaction['notes'] ?? null,
+                    null,
                     $importId
                 );
 
@@ -599,8 +577,6 @@ class ImportService {
                 $errors[] = ['row' => $index + 1, 'error' => $e->getMessage()];
             }
         }
-
-        $this->normalizer->resetDateFormat();
 
         return [
             'imported' => $imported,

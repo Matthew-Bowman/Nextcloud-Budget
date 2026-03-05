@@ -36,7 +36,7 @@ class YearOverYearController extends Controller {
      * @NoAdminRequired
      */
     #[UserRateLimit(limit: 30, period: 60)]
-    public function compareMonth(int $month = 0, int $years = 3, ?int $accountId = null): DataResponse {
+    public function compareMonth(int $month = 0, int $years = 3): DataResponse {
         try {
             // Default to current month if not specified
             if ($month <= 0 || $month > 12) {
@@ -46,7 +46,7 @@ class YearOverYearController extends Controller {
             // Limit years to reasonable range
             $years = max(1, min(10, $years));
 
-            $comparison = $this->service->compareMonth($this->userId, $month, $years, $accountId);
+            $comparison = $this->service->compareMonth($this->userId, $month, $years);
             return new DataResponse($comparison);
         } catch (\Exception $e) {
             $this->logger->error('Failed to compare month', [
@@ -66,12 +66,12 @@ class YearOverYearController extends Controller {
      * @NoAdminRequired
      */
     #[UserRateLimit(limit: 30, period: 60)]
-    public function compareYears(int $years = 3, ?int $accountId = null): DataResponse {
+    public function compareYears(int $years = 3): DataResponse {
         try {
             // Limit years to reasonable range
             $years = max(1, min(10, $years));
 
-            $comparison = $this->service->compareYears($this->userId, $years, $accountId);
+            $comparison = $this->service->compareYears($this->userId, $years);
             return new DataResponse($comparison);
         } catch (\Exception $e) {
             $this->logger->error('Failed to compare years', [
@@ -91,12 +91,12 @@ class YearOverYearController extends Controller {
      * @NoAdminRequired
      */
     #[UserRateLimit(limit: 30, period: 60)]
-    public function compareCategories(int $years = 2, ?int $accountId = null): DataResponse {
+    public function compareCategories(int $years = 2): DataResponse {
         try {
             // Limit years to reasonable range
             $years = max(1, min(5, $years));
 
-            $comparison = $this->service->compareCategorySpending($this->userId, $years, $accountId);
+            $comparison = $this->service->compareCategorySpending($this->userId, $years);
             return new DataResponse($comparison);
         } catch (\Exception $e) {
             $this->logger->error('Failed to compare categories', [
@@ -116,12 +116,12 @@ class YearOverYearController extends Controller {
      * @NoAdminRequired
      */
     #[UserRateLimit(limit: 30, period: 60)]
-    public function monthlyTrends(int $years = 2, ?int $accountId = null): DataResponse {
+    public function monthlyTrends(int $years = 2): DataResponse {
         try {
             // Limit years to reasonable range
             $years = max(1, min(5, $years));
 
-            $trends = $this->service->getMonthlyTrends($this->userId, $years, $accountId);
+            $trends = $this->service->getMonthlyTrends($this->userId, $years);
             return new DataResponse($trends);
         } catch (\Exception $e) {
             $this->logger->error('Failed to get monthly trends', [

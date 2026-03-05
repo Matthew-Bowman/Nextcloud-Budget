@@ -23,7 +23,6 @@ import AuthModule from './modules/auth/AuthModule.js';
 import DashboardModule from './modules/dashboard/DashboardModule.js';
 import TransactionsModule from './modules/transactions/TransactionsModule.js';
 import PensionsModule from './modules/pensions/PensionsModule.js';
-import AssetsModule from './modules/assets/AssetsModule.js';
 import SavingsModule from './modules/savings/SavingsModule.js';
 import IncomeModule from './modules/income/IncomeModule.js';
 import BillsModule from './modules/bills/BillsModule.js';
@@ -37,7 +36,6 @@ import ReportsModule from './modules/reports/ReportsModule.js';
 import ImportModule from './modules/import/ImportModule.js';
 import AccountsModule from './modules/accounts/AccountsModule.js';
 import CategoriesModule from './modules/categories/CategoriesModule.js';
-import ExchangeRatesModule from './modules/exchange-rates/ExchangeRatesModule.js';
 
 function reloadCssFile(changedPath) {
     changedPath = changedPath.replace(/\\/g, "/");
@@ -77,8 +75,6 @@ class BudgetApp {
         this.transactions = [];
         this.pensions = [];
         this.currentPension = null;
-        this.assets = [];
-        this.currentAsset = null;
         this.charts = {};
         this.settings = {};
         this.options = {}; // Available options (currencies, date formats, etc.) from /api/settings/options
@@ -125,7 +121,6 @@ class BudgetApp {
         this.dashboardModule = new DashboardModule(this);
         this.transactionsModule = new TransactionsModule(this);
         this.pensionsModule = new PensionsModule(this);
-        this.assetsModule = new AssetsModule(this);
         this.savingsModule = new SavingsModule(this);
         this.incomeModule = new IncomeModule(this);
         this.billsModule = new BillsModule(this);
@@ -139,7 +134,6 @@ class BudgetApp {
         this.importModule = new ImportModule(this);
         this.accountsModule = new AccountsModule(this);
         this.categoriesModule = new CategoriesModule(this);
-        this.exchangeRatesModule = new ExchangeRatesModule(this);
 
         this.init();
     }
@@ -877,6 +871,10 @@ class BudgetApp {
         return this.transactionsModule.setupInlineEditingListeners();
     }
 
+    renderTransactionsTable(transactions) {
+        return this.transactionsModule.renderTransactionsTable(transactions);
+    }
+
     renderEnhancedTransactionsTable() {
         const tbody = document.querySelector('#transactions-table tbody');
         if (!tbody || !this.transactions) return;
@@ -1117,9 +1115,6 @@ class BudgetApp {
             if (this.transactionFilters?.amountMax) {
                 params.append('amountMax', this.transactionFilters.amountMax);
             }
-            if (this.transactionFilters?.status) {
-                params.append('status', this.transactionFilters.status);
-            }
 
             // Add sorting parameters
             if (this.currentSort) {
@@ -1173,7 +1168,37 @@ class BudgetApp {
 
         let filtered = [...this.transactions];
 
-        // Category, type, amount, and status filters are handled server-side.
+        // Apply filters that weren't handled by backend
+        if (this.transactionFilters.category) {
+            if (this.transactionFilters.category === 'uncategorized') {
+                filtered = filtered.filter(t => !t.categoryId);
+            } else {
+                filtered = filtered.filter(t => t.categoryId === parseInt(this.transactionFilters.category));
+            }
+        }
+
+        if (this.transactionFilters.type) {
+            filtered = filtered.filter(t => t.type === this.transactionFilters.type);
+        }
+
+        if (this.transactionFilters.amountMin) {
+            const min = parseFloat(this.transactionFilters.amountMin);
+            filtered = filtered.filter(t => t.amount >= min);
+        }
+
+        if (this.transactionFilters.amountMax) {
+            const max = parseFloat(this.transactionFilters.amountMax);
+            filtered = filtered.filter(t => t.amount <= max);
+        }
+
+        if (this.transactionFilters.status) {
+            const today = new Date().toISOString().split('T')[0];
+            if (this.transactionFilters.status === 'pending') {
+                filtered = filtered.filter(t => t.date > today);
+            } else if (this.transactionFilters.status === 'cleared') {
+                filtered = filtered.filter(t => t.date <= today);
+            }
+        }
 
         // Apply sorting
         if (this.currentSort?.field) {
@@ -2132,10 +2157,6 @@ class BudgetApp {
         return this.rulesModule.loadRulesView();
     }
 
-    async loadExchangeRatesView() {
-        return this.exchangeRatesModule.loadExchangeRatesView();
-    }
-
     // ============================================
     // RECURRING INCOME METHODS
     // ============================================
@@ -2942,13 +2963,7 @@ class BudgetApp {
             'rule-modal',
             'apply-rules-modal',
             'goal-modal',
-            'add-to-goal-modal',
-            'pension-modal',
-            'pension-balance-modal',
-            'pension-contribution-modal',
-            'asset-modal',
-            'asset-value-modal',
-            'manual-rate-modal'
+            'add-to-goal-modal'
         ];
 
         modalIds.forEach(modalId => {
@@ -3308,94 +3323,6 @@ class BudgetApp {
         return this.pensionsModule.loadDashboardPensionSummary();
     }
 
-    // =====================
-    // Assets Methods
-    // =====================
-
-    async loadAssetsView() {
-        return this.assetsModule.loadAssetsView();
-    }
-
-    async loadAssets() {
-        return this.assetsModule.loadAssets();
-    }
-
-    async loadAssetSummary() {
-        return this.assetsModule.loadAssetSummary();
-    }
-
-    async loadAssetProjection() {
-        return this.assetsModule.loadAssetProjection();
-    }
-
-    renderAssets() {
-        return this.assetsModule.renderAssets();
-    }
-
-    renderAssetCard(asset) {
-        return this.assetsModule.renderAssetCard(asset);
-    }
-
-    updateAssetsSummary(summary) {
-        return this.assetsModule.updateAssetsSummary(summary);
-    }
-
-    updateAssetsProjection(projection) {
-        return this.assetsModule.updateAssetsProjection(projection);
-    }
-
-    setupAssetEventListeners() {
-        return this.assetsModule.setupAssetEventListeners();
-    }
-
-    showAssetModal(assetId = null) {
-        return this.assetsModule.showAssetModal(assetId);
-    }
-
-    closeAssetModal() {
-        return this.assetsModule.closeAssetModal();
-    }
-
-    async saveAsset() {
-        return this.assetsModule.saveAsset();
-    }
-
-    async deleteAsset(assetId) {
-        return this.assetsModule.deleteAsset(assetId);
-    }
-
-    async showAssetDetails(assetId) {
-        return this.assetsModule.showAssetDetails(assetId);
-    }
-
-    closeAssetDetails() {
-        return this.assetsModule.closeAssetDetails();
-    }
-
-    async loadAssetValueChart(assetId) {
-        return this.assetsModule.loadAssetValueChart(assetId);
-    }
-
-    async loadAssetProjectionChart(assetId) {
-        return this.assetsModule.loadAssetProjectionChart(assetId);
-    }
-
-    showValueModal() {
-        return this.assetsModule.showValueModal();
-    }
-
-    closeValueModal() {
-        return this.assetsModule.closeValueModal();
-    }
-
-    async saveValueUpdate() {
-        return this.assetsModule.saveValueUpdate();
-    }
-
-    async loadDashboardAssetSummary() {
-        return this.assetsModule.loadDashboardAssetSummary();
-    }
-
     parseColumnVisibility(settingValue) {
         const defaults = {
             date: true,
@@ -3561,7 +3488,26 @@ class BudgetApp {
     }
 
     getPrimaryCurrency() {
-        return this.settings?.default_currency || 'GBP';
+        // Get default currency from settings
+        const defaultCurrency = this.settings?.default_currency || 'GBP';
+
+        // Return cached value if accounts and settings haven't changed
+        const currentHash = formatters.getAccountsHash(this.accounts);
+        if (this._primaryCurrencyCache &&
+            this._accountsHash === currentHash &&
+            this._settingsCurrencyCache === defaultCurrency) {
+            return this._primaryCurrencyCache;
+        }
+
+        // Get primary currency from utility
+        const primaryCurrency = formatters.getPrimaryCurrency(this.accounts, this.settings);
+
+        // Cache the result
+        this._primaryCurrencyCache = primaryCurrency;
+        this._accountsHash = currentHash;
+        this._settingsCurrencyCache = defaultCurrency;
+
+        return primaryCurrency;
     }
 
     formatDate(dateStr) {

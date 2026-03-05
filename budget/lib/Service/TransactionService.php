@@ -67,8 +67,7 @@ class TransactionService {
         ?string $reference = null,
         ?string $notes = null,
         ?string $importId = null,
-        ?int $billId = null,
-        ?string $status = null
+        ?int $billId = null
     ): Transaction {
         // Verify account belongs to user
         $account = $this->accountMapper->find($accountId, $userId);
@@ -90,7 +89,6 @@ class TransactionService {
         $transaction->setNotes($notes);
         $transaction->setImportId($importId);
         $transaction->setBillId($billId);
-        $transaction->setStatus($status ?? 'cleared');
         $transaction->setReconciled(false);
         $transaction->setCreatedAt(date('Y-m-d H:i:s'));
         $transaction->setUpdatedAt(date('Y-m-d H:i:s'));
@@ -122,7 +120,6 @@ class TransactionService {
         }
 
         $date = $transactionDate ?? $bill->getNextDueDate();
-        $status = ($date > date('Y-m-d')) ? 'scheduled' : 'cleared';
 
         // Handle transfers - create paired transactions
         if ($bill->getIsTransfer()) {
@@ -143,8 +140,7 @@ class TransactionService {
                 reference: null,
                 notes: "Auto-generated transfer: {$bill->getName()}",
                 importId: null,
-                billId: $bill->getId(),
-                status: $status
+                billId: $bill->getId()
             );
 
             // Create deposit to destination account
@@ -160,8 +156,7 @@ class TransactionService {
                 reference: null,
                 notes: "Auto-generated transfer: {$bill->getName()}",
                 importId: null,
-                billId: $bill->getId(),
-                status: $status
+                billId: $bill->getId()
             );
 
             // Link the two transactions
@@ -191,8 +186,7 @@ class TransactionService {
             reference: null,
             notes: "Auto-generated from bill: {$bill->getName()}",
             importId: null,
-            billId: $bill->getId(),
-            status: $status
+            billId: $bill->getId()
         );
 
         // Apply bill's tags to the transaction

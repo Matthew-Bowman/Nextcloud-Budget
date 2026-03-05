@@ -85,7 +85,7 @@ export default class BillsModule {
         billsList.innerHTML = bills.map(bill => {
             const dueDate = bill.nextDueDate || bill.next_due_date;
             const isPaid = this.isBillPaidThisMonth(bill);
-            const isOverdue = !isPaid && dueDate && dueDate < formatters.getTodayDateString();
+            const isOverdue = !isPaid && dueDate && new Date(dueDate) < new Date();
             const isDueSoon = !isPaid && !isOverdue && dueDate && this.isDueSoon(dueDate);
 
             let statusClass = '';
@@ -110,15 +110,12 @@ export default class BillsModule {
                 'monthly': 'Monthly',
                 'quarterly': 'Quarterly',
                 'semi-annually': 'Semi-Annually',
-                'yearly': 'Yearly',
-                'one-time': 'One-Time'
+                'yearly': 'Yearly'
             };
             const frequencyLabel = frequencyLabels[frequency] || frequency.charAt(0).toUpperCase() + frequency.slice(1);
 
             const autoPayEnabled = bill.autoPayEnabled ?? bill.auto_pay_enabled ?? false;
             const autoPayFailed = bill.autoPayFailed ?? bill.auto_pay_failed ?? false;
-            const remainingPayments = bill.remainingPayments ?? bill.remaining_payments ?? null;
-            const endDate = bill.endDate ?? bill.end_date ?? null;
 
             return `
                 <div class="bill-card ${statusClass}" data-bill-id="${bill.id}" data-status="${statusClass}">
@@ -138,8 +135,6 @@ export default class BillsModule {
                             <span class="status-badge">${statusText}</span>
                             ${autoPayEnabled ? `<span class="status-badge auto-pay" title="Auto-pay enabled" style="background: #007bff; margin-left: 5px;"><span class="icon-checkmark"></span> Auto-pay</span>` : ''}
                             ${autoPayFailed ? `<span class="status-badge auto-pay-failed" title="Auto-pay failed - disabled" style="background: #ffc107; color: #856404; margin-left: 5px;"><span class="icon-error"></span> Auto-pay Failed</span>` : ''}
-                            ${remainingPayments !== null ? `<span class="status-badge" title="Remaining payments" style="background: #6c757d; margin-left: 5px;">${remainingPayments} left</span>` : ''}
-                            ${endDate ? `<span class="status-badge" title="Ends ${formatters.formatDate(endDate, this.settings)}" style="background: #6c757d; margin-left: 5px;">Ends ${formatters.formatDate(endDate, this.settings)}</span>` : ''}
                         </div>
                     </div>
                     <div class="bill-actions">
@@ -171,7 +166,9 @@ export default class BillsModule {
     }
 
     isDueSoon(dateStr) {
-        const diffDays = formatters.daysBetweenDates(formatters.getTodayDateString(), dateStr);
+        const dueDate = new Date(dateStr);
+        const now = new Date();
+        const diffDays = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
         return diffDays >= 0 && diffDays <= 7;
     }
 
@@ -364,11 +361,6 @@ export default class BillsModule {
                 document.querySelectorAll('#bill-custom-months input[type="checkbox"]').forEach(cb => cb.checked = false);
             }
 
-            // Set end date / remaining payments
-            document.getElementById('bill-end-date').value = bill.endDate || bill.end_date || '';
-            const remainingPayments = bill.remainingPayments ?? bill.remaining_payments;
-            document.getElementById('bill-remaining-payments').value = remainingPayments !== null && remainingPayments !== undefined ? remainingPayments.toString() : '';
-
             // Reset transaction creation fields for edit mode
             document.getElementById('bill-create-transaction').checked = false;
             document.getElementById('bill-transaction-date').value = '';
@@ -392,10 +384,6 @@ export default class BillsModule {
             title.textContent = 'Add Bill';
             // Clear all month checkboxes for new bill
             document.querySelectorAll('#bill-custom-months input[type="checkbox"]').forEach(cb => cb.checked = false);
-
-            // Clear end date / remaining payments
-            document.getElementById('bill-end-date').value = '';
-            document.getElementById('bill-remaining-payments').value = '';
 
             // Reset transaction creation fields for new bill
             document.getElementById('bill-create-transaction').checked = false;
@@ -427,15 +415,13 @@ export default class BillsModule {
         const dueDayGroup = document.getElementById('due-day-group');
         const dueMonthGroup = document.getElementById('due-month-group');
         const customMonthsGroup = document.getElementById('custom-months-group');
-        const endDateGroup = document.getElementById('end-date-group');
-        const remainingPaymentsGroup = document.getElementById('remaining-payments-group');
 
         // Show/hide custom months selector for custom frequency
         if (frequency === 'custom') {
             customMonthsGroup.style.display = 'block';
             dueDayGroup.style.display = 'block';
             dueMonthGroup.style.display = 'none';
-        } else if (frequency === 'yearly' || frequency === 'one-time') {
+        } else if (frequency === 'yearly') {
             customMonthsGroup.style.display = 'none';
             dueDayGroup.style.display = 'block';
             dueMonthGroup.style.display = 'block';
@@ -444,11 +430,6 @@ export default class BillsModule {
             dueDayGroup.style.display = 'block';
             dueMonthGroup.style.display = 'none';
         }
-
-        // Hide end date/remaining payments for one-time (already auto-deactivates)
-        const isOneTime = frequency === 'one-time';
-        if (endDateGroup) endDateGroup.style.display = isOneTime ? 'none' : 'block';
-        if (remainingPaymentsGroup) remainingPaymentsGroup.style.display = isOneTime ? 'none' : 'block';
 
         // Update due day label based on frequency
         const dueDayLabel = dueDayGroup.querySelector('label');
@@ -516,9 +497,7 @@ export default class BillsModule {
             createTransaction: document.getElementById('bill-create-transaction')?.checked || false,
             transactionDate: document.getElementById('bill-transaction-date')?.value || null,
             autoPayEnabled: document.getElementById('bill-auto-pay')?.checked || false,
-            tagIds: this.getSelectedBillTagIds(),
-            endDate: document.getElementById('bill-end-date').value || null,
-            remainingPayments: document.getElementById('bill-remaining-payments').value ? parseInt(document.getElementById('bill-remaining-payments').value) : null
+            tagIds: this.getSelectedBillTagIds()
         };
 
         // Add custom recurrence pattern if frequency is custom
@@ -608,6 +587,7 @@ export default class BillsModule {
             }
 
             const previousPaidDate = bill.lastPaidDate || bill.last_paid_date || null;
+            const currentDate = new Date().toISOString().split('T')[0];
 
             const response = await fetch(OC.generateUrl(`/apps/budget/api/bills/${billId}/paid`), {
                 method: 'POST',
@@ -616,6 +596,7 @@ export default class BillsModule {
                     'requesttoken': OC.requestToken
                 },
                 body: JSON.stringify({
+                    paidDate: currentDate,
                     createNextTransaction: true
                 })
             });

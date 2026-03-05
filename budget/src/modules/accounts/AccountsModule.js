@@ -151,7 +151,7 @@ export default class AccountsModule {
         };
 
         // Categorize accounts into assets and liabilities
-        const assetTypes = ['checking', 'savings', 'investment', 'cash', 'cryptocurrency', 'investment-tracked_212'];
+        const assetTypes = ['checking', 'savings', 'investment', 'investment-tracked_212', 'cash'];
         const liabilityTypes = ['credit_card', 'loan'];
 
         const assets = accounts.filter(acc => assetTypes.includes(getField(acc, 'type')));
@@ -553,7 +553,7 @@ export default class AccountsModule {
             const filters = this.accountFilters || {};
             if (filters.category) params.set('category', filters.category);
             if (filters.type) params.set('type', filters.type);
-            if (filters.status) params.set('status', filters.status);
+            if (filters.status) params.set('reconciled', filters.status === 'cleared' ? '1' : '0');
             if (filters.dateFrom) params.set('dateFrom', filters.dateFrom);
             if (filters.dateTo) params.set('dateTo', filters.dateTo);
             if (filters.amountMin) params.set('amountMin', filters.amountMin);
@@ -634,13 +634,13 @@ export default class AccountsModule {
             const amount = parseFloat(transaction.amount) || 0;
             const currency = this.currentAccount?.currency || this.getPrimaryCurrency();
             const category = this.categories?.find(c => c.id === transaction.categoryId);
-            const isScheduled = transaction.status === 'scheduled';
-            const scheduledBadge = isScheduled ? '<span class="scheduled-badge">Scheduled</span>' : '';
+            const isPending = transaction.date > today;
+            const pendingBadge = isPending ? '<span class="pending-badge">Pending</span>' : '';
 
             return `
-                <tr class="transaction-row${isScheduled ? ' scheduled-transaction' : ''}" data-transaction-id="${transaction.id}">
+                <tr class="transaction-row${isPending ? ' pending-transaction' : ''}" data-transaction-id="${transaction.id}">
                     <td class="date-column">
-                        <span class="transaction-date">${this.formatDate(transaction.date)}</span>${scheduledBadge}
+                        <span class="transaction-date">${this.formatDate(transaction.date)}</span>${pendingBadge}
                     </td>
                     <td class="description-column">
                         <div class="transaction-description">
@@ -1262,7 +1262,7 @@ export default class AccountsModule {
 
             // Sensitive fields: only include if user entered a value
             // For edits, empty means "keep existing" - don't send to avoid overwriting
-            const sensitiveFields = ['accountNumber', 'routingNumber', 'sortCode', 'iban', 'swiftBic', 'walletAddress', 'trading212ApiKeyId', 'trading212ApiSecretKey'];
+            const sensitiveFields = ['accountNumber', 'routingNumber', 'sortCode', 'iban', 'swiftBic', 'trading212ApiKeyId', 'trading212ApiSecretKey'];
             const sensitiveFieldIds = {
                 accountNumber: 'form-account-number',
                 routingNumber: 'form-routing-number',
@@ -1271,7 +1271,6 @@ export default class AccountsModule {
                 swiftBic: 'form-swift-bic',
                 trading212ApiKeyId: 'investment-tracked-212_api-key-id',
                 trading212ApiSecretKey: 'investment-tracked-212_api-secret-key',
-                walletAddress: 'form-wallet-address'
             };
 
             sensitiveFields.forEach(field => {
@@ -1446,8 +1445,7 @@ export default class AccountsModule {
                 { id: 'form-routing-number', hasValue: !!account.routingNumber },
                 { id: 'form-sort-code', hasValue: !!account.sortCode },
                 { id: 'form-iban', hasValue: !!account.iban },
-                { id: 'form-swift-bic', hasValue: !!account.swiftBic },
-                { id: 'form-wallet-address', hasValue: !!account.walletAddress }
+                { id: 'form-swift-bic', hasValue: !!account.swiftBic }
             ];
 
             sensitiveFields.forEach(field => {
@@ -1594,27 +1592,6 @@ export default class AccountsModule {
             case 'cash':
                 // No additional fields for cash accounts
                 break;
-
-            case 'cryptocurrency':
-                // Show wallet address field only
-                const walletGroup = document.getElementById('wallet-address-group');
-                if (walletGroup) {
-                    walletGroup.style.display = 'block';
-                }
-                // Update balance step for crypto precision
-                const balanceInput = document.getElementById('account-balance');
-                if (balanceInput) {
-                    balanceInput.step = '0.00000001';
-                }
-                break;
-        }
-
-        // Reset balance step to fiat default for non-crypto types
-        if (accountType !== 'cryptocurrency') {
-            const balanceInput = document.getElementById('account-balance');
-            if (balanceInput) {
-                balanceInput.step = '0.01';
-            }
         }
     }
 
@@ -1814,11 +1791,6 @@ export default class AccountsModule {
                 color: '#2d2d2d',
                 label: 'Trading212'
             },
-            'cryptocurrency': {
-                icon: 'icon-link',
-                color: '#F7931A',
-                label: 'Cryptocurrency'
-            }
         };
 
         return typeMap[accountType] || {

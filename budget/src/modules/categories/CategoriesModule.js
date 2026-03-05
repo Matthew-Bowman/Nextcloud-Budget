@@ -691,14 +691,13 @@ export default class CategoriesModule {
 
         title.textContent = 'Add Category';
         this.resetCategoryForm();
+        this.populateCategoryParentDropdown();
 
-        // Set category type BEFORE populating parent dropdown so it filters correctly
+        // Pre-select the current category type tab
         const typeSelect = document.getElementById('category-type');
         if (typeSelect && this.currentCategoryType) {
             typeSelect.value = this.currentCategoryType;
         }
-
-        this.populateCategoryParentDropdown();
 
         // Show empty state for tag sets (can't add tag sets until category is saved)
         this.app.renderCategoryTagSetsUI(null);
@@ -1154,8 +1153,7 @@ export default class CategoriesModule {
                 if (categoryIds.length === 0) continue;
 
                 // Get date range for this period
-                const startDay = period === 'monthly' ? parseInt(this.app.settings?.budget_start_day || '1', 10) : 1;
-                const dateRange = formatters.getPeriodDateRange(period, startDay);
+                const dateRange = formatters.getPeriodDateRange(period);
 
                 // Fetch spending for this period
                 const response = await fetch(
@@ -1326,8 +1324,7 @@ export default class CategoriesModule {
     async recalculateCategorySpending(categoryId, period) {
         try {
             // Get date range for the period
-            const startDay = period === 'monthly' ? parseInt(this.app.settings?.budget_start_day || '1', 10) : 1;
-            const dateRange = formatters.getPeriodDateRange(period, startDay);
+            const dateRange = formatters.getPeriodDateRange(period);
 
             // Fetch spending for this category in the period
             const response = await fetch(
