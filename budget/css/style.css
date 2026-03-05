@@ -2356,6 +2356,7 @@ button.danger:hover {
 .account-card-footer {
     display: flex;
     justify-content: space-between;
+    gap: 8px;
     align-items: center;
     padding-top: 12px;
     border-top: 1px solid var(--color-border);
@@ -2373,18 +2374,19 @@ button.danger:hover {
 .account-status-dot {
     width: 8px;
     height: 8px;
+    aspect-ratio: 1;
     border-radius: 50%;
 }
 
-.account-status-dot.healthy {
+.account-status-dot.dot-healthy {
     background: #2e7d32;
 }
 
-.account-status-dot.warning {
+.account-status-dot.dot-warning {
     background: #f57c00;
 }
 
-.account-status-dot.critical {
+.account-status-dot.dot-critical {
     background: #c62828;
 }
 

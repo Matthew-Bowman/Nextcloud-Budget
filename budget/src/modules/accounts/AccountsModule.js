@@ -226,6 +226,7 @@ export default class AccountsModule {
         const accountCurrency = getField(account, 'currency') || this.getPrimaryCurrency();
         const accountId = getField(account, 'id') || 0;
         const institution = getField(account, 'institution') || '';
+        const updatedAt = getField(account, 'updatedAt') || null;
 
         const typeInfo = this.getAccountTypeInfo(accountType);
         const healthStatus = this.getAccountHealthStatus(account);
@@ -266,7 +267,7 @@ export default class AccountsModule {
 
                 <div class="account-card-footer">
                     <div class="account-status">
-                        <span class="account-status-dot ${healthStatus.class}"></span>
+                        <span class="account-status-dot dot-${healthStatus.class}"></span>
                         <span>${healthStatus.tooltip}</span>
                     </div>
                     <div class="account-actions">
@@ -276,7 +277,15 @@ export default class AccountsModule {
                         <button class="account-action-btn delete-btn delete-account-btn" data-account-id="${accountId}" title="Delete Account">
                             <span class="icon-delete" aria-hidden="true"></span>
                         </button>
+                        </button>
                     </div>
+                    ${updatedAt && updatedAt !== "null" ? `
+                        <div>
+                        
+                            <h1>${updatedAt}</h1>
+                        
+                        </div>
+                    ` : ""}
                 </div>
             </div>
         `;
