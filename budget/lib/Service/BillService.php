@@ -115,7 +115,9 @@ class BillService {
         bool $isTransfer = false,
         ?int $destinationAccountId = null,
         ?string $transferDescriptionPattern = null,
-        array $tagIds = []
+        array $tagIds = [],
+        ?string $endDate = null,
+        ?int $remainingPayments = null
     ): Bill {
         // Validate auto-pay requires account
         if ($autoPayEnabled && $accountId === null) {
@@ -152,6 +154,8 @@ class BillService {
         $bill->setDestinationAccountId($destinationAccountId);
         $bill->setTransferDescriptionPattern($transferDescriptionPattern);
         $bill->setTagIdsArray($tagIds);
+        $bill->setEndDate($endDate);
+        $bill->setRemainingPayments($remainingPayments);
         $bill->setCreatedAt(date('Y-m-d H:i:s'));
 
         $nextDue = $this->frequencyCalculator->calculateNextDueDate($frequency, $dueDay, $dueMonth, null, $customRecurrencePattern);
@@ -245,7 +249,7 @@ class BillService {
      *
      * @param int $id Bill ID
      * @param string $userId User ID
-     * @param string|null $paidDate Date bill was paid (defaults to today)
+     * @param string|null $paidDate Date bill was paid (defaults to the bill's current due date)
      * @param bool $createNextTransaction Whether to create transaction for next occurrence
      * @return Bill Updated bill
      */
@@ -257,22 +261,51 @@ class BillService {
             $bill->setAutoPayFailed(false);
         }
 
-        $paidDate = $paidDate ?? date('Y-m-d');
+        // Use the bill's current due date as the paid date — this is the billing
+        // period being satisfied. Avoids marking the wrong period as paid when
+        // the user clicks "Mark Paid" after the due date has passed (e.g. paying
+        // a February bill on March 1st should set last_paid_date to Feb 28, not Mar 1).
+        $paidDate = $paidDate ?? $bill->getNextDueDate() ?? date('Y-m-d');
         $bill->setLastPaidDate($paidDate);
 
-        $nextDue = $this->frequencyCalculator->calculateNextDueDate(
-            $bill->getFrequency(),
-            $bill->getDueDay(),
-            $bill->getDueMonth(),
-            $bill->getNextDueDate(),
-            $bill->getCustomRecurrencePattern()
-        );
-        $bill->setNextDueDate($nextDue);
+        // Auto-deactivate one-time bills after payment
+        if ($bill->getFrequency() === 'one-time') {
+            $bill->setIsActive(false);
+            $bill->setNextDueDate(null);
+        } else {
+            $nextDue = $this->frequencyCalculator->calculateNextDueDate(
+                $bill->getFrequency(),
+                $bill->getDueDay(),
+                $bill->getDueMonth(),
+                $bill->getNextDueDate(),
+                $bill->getCustomRecurrencePattern()
+            );
+            $bill->setNextDueDate($nextDue);
+
+            // Decrement remaining payments if set
+            $remaining = $bill->getRemainingPayments();
+            if ($remaining !== null) {
+                $remaining--;
+                $bill->setRemainingPayments($remaining);
+                if ($remaining <= 0) {
+                    $bill->setIsActive(false);
+                    $bill->setNextDueDate(null);
+                }
+            }
+
+            // Deactivate if next due date exceeds end date
+            $endDate = $bill->getEndDate();
+            if ($endDate !== null && $bill->getNextDueDate() !== null && $bill->getNextDueDate() > $endDate) {
+                $bill->setIsActive(false);
+                $bill->setNextDueDate(null);
+            }
+        }
 
         $bill = $this->mapper->update($bill);
 
         // Auto-create transaction for next occurrence if bill has account
-        if ($createNextTransaction && $bill->getAccountId() !== null) {
+        // Skip for deactivated bills (one-time, end date reached, remaining payments exhausted)
+        if ($createNextTransaction && $bill->getIsActive() && $bill->getAccountId() !== null) {
             try {
                 $this->transactionService->createFromBill($userId, $bill, null);
             } catch (\Exception $e) {
@@ -301,6 +334,7 @@ class BillService {
             'monthly' => 0.0,
             'quarterly' => 0.0,
             'yearly' => 0.0,
+            'one-time' => 0.0,
         ];
 
         $today = date('Y-m-d');
@@ -622,6 +656,14 @@ class BillService {
                 $occurrences[$month] = true;
                 break;
 
+            case 'one-time':
+                // One-time bills only occur in their specified month
+                $month = $dueMonth ?? 1;
+                if ($month >= 1 && $month <= 12) {
+                    $occurrences[$month] = true;
+                }
+                break;
+
             case 'custom':
                 // Parse custom pattern
                 if ($customPattern) {
@@ -635,6 +677,45 @@ class BillService {
                     }
                 }
                 break;
+        }
+
+        // Apply end date constraint: remove occurrences after end date
+        $endDate = $bill->getEndDate();
+        if ($endDate !== null) {
+            $endYear = (int) date('Y', strtotime($endDate));
+            $endMonth = (int) date('n', strtotime($endDate));
+
+            for ($month = 1; $month <= 12; $month++) {
+                if ($year > $endYear || ($year === $endYear && $month > $endMonth)) {
+                    $occurrences[$month] = false;
+                }
+            }
+        }
+
+        // Apply remaining payments constraint: cap number of future occurrences
+        $remaining = $bill->getRemainingPayments();
+        if ($remaining !== null && $remaining >= 0) {
+            $nextDueDate = $bill->getNextDueDate();
+            $nextDueYear = $nextDueDate ? (int) date('Y', strtotime($nextDueDate)) : $year;
+            $nextDueMonth = $nextDueDate ? (int) date('n', strtotime($nextDueDate)) : 1;
+
+            $count = 0;
+            for ($month = 1; $month <= 12; $month++) {
+                if (!$occurrences[$month]) {
+                    continue;
+                }
+
+                // Skip months before the next due date
+                if ($year < $nextDueYear || ($year === $nextDueYear && $month < $nextDueMonth)) {
+                    $occurrences[$month] = false;
+                    continue;
+                }
+
+                $count++;
+                if ($count > $remaining) {
+                    $occurrences[$month] = false;
+                }
+            }
         }
 
         return $occurrences;

@@ -8,18 +8,13 @@ A comprehensive financial management app for Nextcloud. Track spending habits, m
 
 ![Dashboard Screenshot](screenshots/dashboard.png)
 
-## What's New in v2.1.0
+## What's New in v2.6.0
 
-**Automation & Planning Release** - Advanced Rules, Bill Automation & Transfer Tracking
-- **Advanced Rules Engine** - Visual query builder for complex boolean matching criteria with nested AND/OR/NOT ocoperators
-- **Bills Calendar Report** - Annual overview showing which months bills are due with heatmap visualization
-- **Recurring Transfers** - Track recurring transfers between accounts with auto-pay support
-- **Auto-Pay Bills** - Automatically mark bills as paid when due date arrives with notifications
-- **Future Bill Transactions** - Create future transactions for better cash flow planning
-- **Dynamic Budget Periods** - Switch between weekly, monthly, quarterly, and yearly budgets with automatic pro-rating
-- **Enhanced Net Worth Tracking** - Shows when last automatic snapshot was taken
-- **Currency Symbol Fixes** - Correct positioning for suffix currencies (Swedish, Norwegian, Danish kronas, Swiss franc)
-- **Bug Fixes** - Timezone date calculations, transaction filters, rule migrations, and more
+- **Configurable Budget Cycle Start Day** - Set a custom start day for budget periods instead of always using the 1st of the month
+- **Exchange Rate Support for Non-ECB Currencies** - Currencies not covered by the European Central Bank now fetch rates from fallback providers
+- **Transaction Status Column** - Scheduled future transactions can be excluded from reports and balance calculations
+- **Report Fixes** - Account filtering, year-over-year filtering, and export errors resolved
+- **Light Theme Fix** - Category text now readable in light theme
 
 See the [full changelog](budget/CHANGELOG.md) for details.
 
@@ -32,13 +27,14 @@ See the [full changelog](budget/CHANGELOG.md) for details.
 - **Auto-Updating Tiles** - Dashboard refreshes automatically when transactions or budgets change
 
 ### Account & Transaction Management
-- **Multi-Account Management** - Track bank accounts, credit cards, and cash across 20+ currencies
+- **Multi-Account Management** - Track bank accounts, credit cards, cash, and cryptocurrency across 45+ currencies
 - **Transaction Tracking** - Add, edit, categorize, and search transactions with advanced filtering
 - **Bulk Operations** - Delete, reconcile, or edit multiple transactions at once
 - **Configurable Table Columns** - Show/hide columns to customize your transaction view
 - **Split Transactions** - Allocate single transactions across multiple categories
 - **Transaction Matching** - Automatic transfer detection and linking between accounts
 - **Transfer Creation** - Create linked transfer transactions directly from transaction form
+- **Pending Transactions** - Future-dated transactions shown with visual indicators and filterable status (All / Cleared / Pending)
 
 ### Import & Automation
 - **Smart Import** - Import bank statements from CSV, OFX, and QIF formats
@@ -75,9 +71,14 @@ See the [full changelog](budget/CHANGELOG.md) for details.
   - Monthly equivalent calculations for different frequencies
   - Integration with bills system for unified tracking
 
-### Debt & Goals
+### Assets & Goals
+- **Asset Tracking** - Track non-liquid assets (real estate, vehicles, jewelry, collectibles)
+  - Value history with snapshots over time
+  - Appreciation/depreciation projections with interactive charts
+  - Integrated into net worth calculations
 - **Debt Payoff Planner** - Plan debt repayment using avalanche or snowball strategies
 - **Savings Goals** - Set financial targets with progress tracking and achievement forecasting
+  - Link goals to tags for automatic amount calculation from tagged transactions
 - **Pension Tracker** - Track retirement accounts with growth projections and combined forecasts
 
 ### Sharing & Collaboration
@@ -86,8 +87,9 @@ See the [full changelog](budget/CHANGELOG.md) for details.
   - Contact integration with Nextcloud
 
 ### Reporting & Analysis
-- **Net Worth History** - Track assets and liabilities over time with interactive charts
+- **Net Worth History** - Track assets, liabilities, and non-liquid assets over time with interactive charts
   - Daily automatic snapshots with manual recording option
+  - Multi-currency conversion to default currency via ECB and CoinGecko rates
   - Status indicators showing last snapshot timing
 - **Bills Calendar** - Visualize when bills are due throughout the year
 - **Year-over-Year Reports** - Compare spending across multiple years side-by-side
@@ -104,7 +106,7 @@ See the [full changelog](budget/CHANGELOG.md) for details.
 
 ## Requirements
 
-- Nextcloud 30 - 32
+- Nextcloud 30 - 35
 - PHP 8.1+
 - MySQL/MariaDB, PostgreSQL, or SQLite
 
@@ -180,7 +182,7 @@ budget/
 │   ├── Enum/          # Type definitions
 │   └── Migration/     # Database schema versions
 ├── src/               # Frontend source (ES6+)
-│   ├── modules/       # Feature-based modules (14 modules)
+│   ├── modules/       # Feature-based modules (17 modules)
 │   ├── core/          # Router and infrastructure
 │   ├── utils/         # Shared utilities
 │   └── config/        # Dashboard widgets configuration
@@ -283,6 +285,7 @@ The app provides a REST API for all functionality:
 | `/api/bills` | Recurring bill tracking with auto-pay |
 | `/api/transfers` | Recurring transfers between accounts |
 | `/api/goals` | Savings goal management |
+| `/api/assets` | Non-liquid asset tracking |
 | `/api/pensions` | Pension account tracking |
 | `/api/reports` | Financial reports |
 | `/api/migration` | Data export/import |

@@ -174,6 +174,19 @@ return [
         ['name' => 'pension#destroySnapshot', 'url' => '/api/pensions/snapshots/{snapshotId}', 'verb' => 'DELETE'],
         ['name' => 'pension#destroyContribution', 'url' => '/api/pensions/contributions/{contributionId}', 'verb' => 'DELETE'],
 
+        // Asset routes - specific paths before {id} wildcard
+        ['name' => 'asset#index', 'url' => '/api/assets', 'verb' => 'GET'],
+        ['name' => 'asset#create', 'url' => '/api/assets', 'verb' => 'POST'],
+        ['name' => 'asset#summary', 'url' => '/api/assets/summary', 'verb' => 'GET'],
+        ['name' => 'asset#combinedProjection', 'url' => '/api/assets/projection', 'verb' => 'GET'],
+        ['name' => 'asset#show', 'url' => '/api/assets/{id}', 'verb' => 'GET'],
+        ['name' => 'asset#update', 'url' => '/api/assets/{id}', 'verb' => 'PUT'],
+        ['name' => 'asset#destroy', 'url' => '/api/assets/{id}', 'verb' => 'DELETE'],
+        ['name' => 'asset#snapshots', 'url' => '/api/assets/{id}/snapshots', 'verb' => 'GET'],
+        ['name' => 'asset#createSnapshot', 'url' => '/api/assets/{id}/snapshots', 'verb' => 'POST'],
+        ['name' => 'asset#projection', 'url' => '/api/assets/{id}/projection', 'verb' => 'GET'],
+        ['name' => 'asset#destroySnapshot', 'url' => '/api/assets/snapshots/{snapshotId}', 'verb' => 'DELETE'],
+
         // Budget Alert routes
         ['name' => 'alert#index', 'url' => '/api/alerts', 'verb' => 'GET'],
         ['name' => 'alert#status', 'url' => '/api/alerts/status', 'verb' => 'GET'],
@@ -257,5 +270,12 @@ return [
         ['name' => 'migration#export', 'url' => '/api/migration/export', 'verb' => 'GET'],
         ['name' => 'migration#preview', 'url' => '/api/migration/preview', 'verb' => 'POST'],
         ['name' => 'migration#import', 'url' => '/api/migration/import', 'verb' => 'POST'],
+
+        // Exchange rate routes
+        ['name' => 'exchangeRate#index', 'url' => '/api/exchange-rates', 'verb' => 'GET'],
+        ['name' => 'exchangeRate#latest', 'url' => '/api/exchange-rates/latest', 'verb' => 'GET'],
+        ['name' => 'exchangeRate#refresh', 'url' => '/api/exchange-rates/refresh', 'verb' => 'POST'],
+        ['name' => 'exchangeRate#setManualRate', 'url' => '/api/exchange-rates/manual', 'verb' => 'POST'],
+        ['name' => 'exchangeRate#removeManualRate', 'url' => '/api/exchange-rates/manual/{currency}', 'verb' => 'DELETE'],
     ],
 ];
