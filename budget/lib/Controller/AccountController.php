@@ -25,27 +25,28 @@ class AccountController extends Controller {
     private AccountService $service;
     private ValidationService $validationService;
     private AuditService $auditService;
-    private string $userId;
+    private ?string $userId;
 
     public function __construct(
         IRequest $request,
         AccountService $service,
         ValidationService $validationService,
         AuditService $auditService,
-        string $userId,
+        ?string $userId,
         LoggerInterface $logger
     ) {
         parent::__construct(Application::APP_ID, $request);
         $this->service = $service;
         $this->validationService = $validationService;
         $this->auditService = $auditService;
-        $this->userId = $userId;
+        $this->userId = $userId ?? null;
         $this->setLogger($logger);
         $this->setInputValidator($validationService);
     }
 
     /**
      * @NoAdminRequired
+     * @NoCSRFRequired
      */
     public function index(): DataResponse {
         try {
